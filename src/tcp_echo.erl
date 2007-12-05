@@ -1,5 +1,6 @@
 -module(tcp_echo).
--author('cooldaemon@gmail.com').
+
+-include_lib("eunit/include/eunit.hrl").
 
 % External API
 -export([start_link/1]). 
@@ -30,3 +31,12 @@ recv(Socket) ->
     {error, closed} ->
       ok
   end.
+
+  
+%% Tests
+
+truth_test_() ->
+	[
+	?_assertMatch(1, 1)
+	].
+  

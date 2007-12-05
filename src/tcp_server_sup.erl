@@ -1,6 +1,7 @@
 -module(tcp_server_sup).
--author('cooldaemon@gmail.com').
 -behaviour(supervisor).
+
+-include_lib("eunit/include/eunit.hrl").
 
 -include("tcp_server.hrl").
 
@@ -42,3 +43,12 @@ init([Port, Module]) ->
       []
     }
   ]}}.
+
+  
+%% Tests
+
+truth_test_() ->
+	[
+	?_assertMatch(1, 1)
+	].
+  

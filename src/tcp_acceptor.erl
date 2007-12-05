@@ -1,5 +1,6 @@
 -module(tcp_acceptor).
--author('cooldaemon@gmail.com').
+
+-include_lib("eunit/include/eunit.hrl").
 
 % External API
 -export([start_link/1]). 
@@ -28,3 +29,12 @@ accept(ListenSocket) ->
   {ok, Socket} = gen_tcp:accept(ListenSocket),
   tcp_client_sup:start_child(Socket),
   accept(ListenSocket).
+
+  
+%% Tests
+
+truth_test_() ->
+	[
+	?_assertMatch(1, 1)
+	].
+  
