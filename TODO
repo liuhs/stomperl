@@ -1,1 +1,7 @@
+== FEATURES == 
+support CONNECT and DISCONNECT
+support full Stomp except transaction
+
+== FUTURE ==
+support transaction
 implement Stomp with gen_fsm
