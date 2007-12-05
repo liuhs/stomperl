@@ -1,4 +1,4 @@
--module(tcp_echo).
+-module(tcp_stomp).
 
 -include_lib("eunit/include/eunit.hrl").
 
