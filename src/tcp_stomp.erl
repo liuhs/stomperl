@@ -20,6 +20,7 @@ init(Parent, Socket) ->
 recv(Socket) ->
   case gen_tcp:recv(Socket, 0) of
     {ok, B} ->
+    	io:format("GOT MESSAGE :\n~s", [B]),
       case B of
         <<"bye\r\n">> ->
           gen_tcp:send(Socket, <<"cya\r\n">>),

@@ -1,4 +1,5 @@
 == FEATURES == 
+handle frames - keep status and partial frame in tcp_stomp:recv(Socket, State)
 support CONNECT and DISCONNECT
 support full Stomp except transaction
 
