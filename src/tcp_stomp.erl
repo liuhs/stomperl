@@ -34,14 +34,22 @@ process_frame(Socket, FrameText) ->
 	io:format("FRAME COMMAND: ~s~n", [stomp_frame:get_command(Frame)]),
 	case stomp_frame:get_command(Frame) of
 		"CONNECT" ->
-			io:format("CONNECTED~n"),
-			gen_tcp:send(Socket, <<"CONNECTED\nsession:123\n\n\000\n">>)
+			SessionId = session_id(),
+			Message = "CONNECTED\nsession:" ++ SessionId ++ "\n\n\000\n",
+			gen_tcp:send(Socket, list_to_binary(Message)),
+			io:format("CONNECTED: ~s~n", [SessionId])
 	end.
+
+session_id() ->
+	Number = random:uniform(c:memory(total)),
+	integer_to_list(Number).
   
 %% Tests
 
-truth_test_() ->
+session_id_test_() ->
+	Id1 = session_id(),
+	Id2 = session_id(),
 	[
-	?_assertMatch(1, 1)
+	?_assert(Id1 /= Id2)
 	].
   
