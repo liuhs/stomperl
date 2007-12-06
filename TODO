@@ -1,6 +1,8 @@
 == FEATURES == 
-support CONNECT and DISCONNECT
-support full Stomp except transaction
+support CONNECT (done)
+support DISCONNECT
+server startup script
+support subscription/send
 
 == DEFECTS ==
 currently I only support "\n" as newline, not "\r\n"
@@ -8,5 +10,5 @@ I use {packet, raw} in gen_tcp:listen, so it doesn't support telnet access
 I use c:memory(total) as seed to create random session id
 
 == FUTURE ==
-support transaction
+full protocol support
 implement Stomp with gen_fsm
