@@ -15,7 +15,7 @@ start_link(Port) ->
 % Callbacks
 init(Parent, Port) ->
   case gen_tcp:listen(
-    Port, [{active, false}, binary, {packet, line}, {reuseaddr, true}]
+    Port, [{active, false}, binary, {packet, raw}, {reuseaddr, true}]
   ) of
     {ok, ListenSocket} ->
       proc_lib:init_ack(Parent, {ok, self()}),

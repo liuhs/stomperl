@@ -2,20 +2,22 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
+-compile(export_all).
+
 parse(FrameText) ->
 	Parts = split_frame(FrameText),
 	Envelope = lists:nth(1, Parts),
 	Body = lists:nth(2, Parts),
 	
-	Tokens = string:tokens(Envelope, "\r\n"),
+	Tokens = string:tokens(Envelope, "\n"),
 	Command = lists:nth(1, Tokens),
 	Headers = parse_headers(lists:delete(Command, Tokens)),
 	{frame, Command, Headers, Body}.
 
 split_frame(FrameText) ->
-	SplitLocation = string:str(FrameText, "\r\n\r\n"),
+	SplitLocation = string:str(FrameText, "\n\n"),
 	Envelope = string:substr(FrameText, 1, SplitLocation - 1),
-	Body = string:substr(FrameText, SplitLocation + 4),
+	Body = string:substr(FrameText, SplitLocation + 2),
 	[Envelope, Body].
 
 parse_headers([]) -> [];
@@ -32,7 +34,7 @@ get_body({frame, _Command, _Headers, Body}) -> Body.
 %% Tests
 
 simple_frame_test_() ->
-	FrameText = "COMMAND\r\nname:value\r\nfoo:bar\r\n\r\nmessage body\r\n",
+	FrameText = "COMMAND\nname:value\nfoo:bar\n\nmessage body\n",
 	Frame = parse(FrameText),
 	Command = get_command(Frame),
 	Headers = get_headers(Frame),
@@ -40,7 +42,7 @@ simple_frame_test_() ->
 	[
 	?_assertMatch("COMMAND", Command),
 	?_assertMatch([{"name", "value"}, {"foo", "bar"}], Headers),
-	?_assertMatch("message body\r\n", Body),
+	?_assertMatch("message body\n", Body),
 	?_assertMatch(1, 1)
 	].
 
@@ -51,8 +53,8 @@ parse_headers_test_() ->
 	].
 	
 split_frame_test_() ->
-	FrameText = "COMMAND\r\nname:value\r\nfoo:bar\r\n\r\nmessage body\r\n\000\r\n",
+	FrameText = "COMMAND\nname:value\nfoo:bar\n\nmessage body\n\000\n",
 	Envelope = lists:nth(1, split_frame(FrameText)),
 	[
-	?_assertMatch("COMMAND\r\nname:value\r\nfoo:bar", Envelope)
+	?_assertMatch("COMMAND\nname:value\nfoo:bar", Envelope)
 	].
