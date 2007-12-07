@@ -6,13 +6,15 @@
 -include("tcp_server.hrl").
 
 % External API
--export([start_link/2, stop/0]). 
+-export([start_server/0, start_link/2, stop/0]). 
 
 % Callbacks
 -export([init/1]). 
 
 % External API
-start_link(Port, Module) ->
+start_server() ->	start_link(61613, tcp_stomp).
+
+start_link(Port, Module) when is_integer(Port) ->
   supervisor:start_link({local, ?MODULE}, ?MODULE, [Port, Module]).
 
 stop() ->

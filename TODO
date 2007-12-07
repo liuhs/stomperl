@@ -3,6 +3,7 @@ support CONNECT (done)
 support subscription/send: remember socket with get/put
 support DISCONNECT
 server startup script
+increase test coverage with some kind of mock
 
 == DEFECTS ==
 currently I only support "\n" as newline, not "\r\n"

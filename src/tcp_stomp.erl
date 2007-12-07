@@ -38,6 +38,10 @@ process_frame(Socket, FrameText) ->
 			Message = "CONNECTED\nsession:" ++ SessionId ++ "\n\n\000\n",
 			gen_tcp:send(Socket, list_to_binary(Message)),
 			io:format("CONNECTED: ~s~n", [SessionId]);
+		"SUBSCRIBE" ->
+			Dest = stomp_frame:get_header(Frame, "destination"),
+			subscription:subscribe(self(), Dest),
+			io:format("Client of ~w SUBSCRIBED ~s~n", [self(), Dest]);
 		_Other ->
 			ok
 	end.

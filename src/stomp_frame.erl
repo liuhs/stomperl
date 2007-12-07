@@ -31,6 +31,15 @@ get_command({frame, Command, _Headers, _Body}) -> Command.
 get_headers({frame, _Command, Headers, _Body}) -> Headers.
 get_body({frame, _Command, _Headers, Body}) -> Body.
 
+get_header(Frame, Key) ->
+	Headers = get_headers(Frame),
+	Pairs = lists:filter(fun({K, _V}) -> K == Key end, Headers),
+	case Pairs of
+		[] -> {error, "header doesn't exist: " ++ Key}; 
+		[{_Key, Value} | _] -> Value;
+		_Other -> {error, "frame structure error"}
+	end.
+
 %% Tests
 
 simple_frame_test_() ->
@@ -44,6 +53,15 @@ simple_frame_test_() ->
 	?_assertMatch([{"name", "value"}, {"foo", "bar"}], Headers),
 	?_assertMatch("message body\n", Body),
 	?_assertMatch(1, 1)
+	].
+
+get_header_test_() ->
+	FrameText = "COMMAND\nname:value\nfoo:bar\n\nmessage body\n",
+	Frame = parse(FrameText),
+	[
+	?_assertMatch("value", get_header(Frame, "name")),
+	?_assertMatch("bar", get_header(Frame, "foo")),
+	?_assertMatch({error, "header doesn't exist: not_exist"}, get_header(Frame, "not_exist"))
 	].
 
 parse_headers_test_() ->

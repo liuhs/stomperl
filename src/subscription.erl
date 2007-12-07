@@ -2,6 +2,8 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
+-export([subscribe/2]).
+
 subscribe(Pid, Dest) -> 
 	dets_storage:do(?MODULE, fun(Module) -> dets:insert(Module, {rand:new(), Dest, Pid}) end).
 

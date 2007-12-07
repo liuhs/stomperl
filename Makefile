@@ -31,3 +31,7 @@ $(EBIN)/%.beam: ${SRC}/%.erl
 .PHONY: clean
 clean:
 	rm -f ${OBJECTS} erl_crash.dump src/*.beam storage/*.table
+	
+.PHONY: start
+start: compile
+	erl -boot start_sasl -pa ${EBIN} # -s tcp_server_sup start_server
