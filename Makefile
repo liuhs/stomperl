@@ -29,7 +29,7 @@ $(EBIN)/%.beam: ${SRC}/%.erl
 	erlc -pa $(EBIN) -W  -o$(EBIN) $<
 
 .PHONY: clean
-clean:
+clean: cleandata
 	rm -f ${OBJECTS} erl_crash.dump src/*.beam storage/*.table
 	
 .PHONY: start

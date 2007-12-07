@@ -6,7 +6,7 @@
 -export([start_link/1]). 
 
 % Callbacks
--export([init/2, recv/1]).
+-export([init/2, recv/2]).
 
 % External API
 start_link(Socket) ->
@@ -15,21 +15,23 @@ start_link(Socket) ->
 % Callbacks
 init(Parent, Socket) ->
   proc_lib:init_ack(Parent, {ok, self()}),
-  recv(Socket).
+  {ok, Mailer} = proc_lib:start_link(mailer, init, [self(), Socket]),
+  recv(Socket, Mailer).
 
-recv(Socket) ->
+recv(Socket, Mailer) ->
   case gen_tcp:recv(Socket, 0) of
     {ok, B} ->
 %    	io:format("GOT DATA :\n~w~n", [B]),
 			FrameText = binary_to_list(B),
       io:format("GOT FRAME:~n~s~n", [FrameText]),
-      process_frame(Socket, FrameText),
-      recv(Socket);
+      process_frame(Socket, FrameText, Mailer),
+      recv(Socket, Mailer);
     {error, closed} ->
+    	subscription:unsubscribe(Mailer),
       ok
   end.
 
-process_frame(Socket, FrameText) ->
+process_frame(Socket, FrameText, Mailer) ->
 	Frame = stomp_frame:parse(FrameText),
 	io:format("[~w]FRAME COMMAND: ~s~n", [self(), stomp_frame:get_command(Frame)]),
 	case stomp_frame:get_command(Frame) of
@@ -40,12 +42,22 @@ process_frame(Socket, FrameText) ->
 			io:format("CONNECTED: ~s~n", [SessionId]);
 		"SUBSCRIBE" ->
 			Dest = stomp_frame:get_header(Frame, "destination"),
-			subscription:subscribe(self(), Dest),
-			io:format("Client of ~w SUBSCRIBED ~s~n", [self(), Dest]);
+			subscription:subscribe(Mailer, Dest),
+			io:format("Client of ~w SUBSCRIBED ~s~n", [Mailer, Dest]);
+		"SEND" ->
+			Dest = stomp_frame:get_header(Frame, "destination"),
+			Body = stomp_frame:get_body(Frame),
+			Subscribers = subscription:find_subscribers(Dest),
+			send(Subscribers, Body, Dest);
 		_Other ->
 			ok
 	end.
 
+send([], _, _) -> ok;
+send([Subscriber | Others], Body, Dest) ->
+	io:format("SUBCSRIBER: ~w~n", [Subscriber]),
+	Subscriber ! {send, Body, Dest},
+	send(Others, Body, Dest).
 
 %% Tests
 

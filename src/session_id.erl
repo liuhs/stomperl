@@ -1,3 +1,4 @@
+%% It's not used yet
 -module(session_id).
 
 -include_lib("eunit/include/eunit.hrl").

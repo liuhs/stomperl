@@ -12,7 +12,13 @@
 -export([init/1]). 
 
 % External API
-start_server() ->	start_link(61613, tcp_stomp).
+
+%% ATTENTION
+%% start server with this method
+%% there's init logic
+start_server() ->	
+	dets_storage:clear(subscription),
+	start_link(61613, tcp_stomp).
 
 start_link(Port, Module) when is_integer(Port) ->
   supervisor:start_link({local, ?MODULE}, ?MODULE, [Port, Module]).
