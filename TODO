@@ -5,6 +5,7 @@ support subscription/send (done)
 async subscription/send
 support DISCONNECT
 server startup script
+acceptance tests
 increase test coverage with some kind of mock
 
 == DEFECTS ==
@@ -16,4 +17,5 @@ debug text outputs need to be cleard
 
 == FUTURE ==
 full protocol support
+create an application (shall we?)
 implement Stomp with gen_fsm

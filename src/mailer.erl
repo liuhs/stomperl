@@ -11,7 +11,7 @@ loop(Socket) ->
 	receive
 		{send, Body, Dest} ->
 			io:format("Sending message to ~s from ~w~n", [Dest, self()]),
-			Message = "MESSAGE\ndestination:" ++ Dest ++ "\nmessage-id:" ++ integer_to_list(rand:new()) ++ "\n\n" ++ Body ++ "\000\n", 
+			Message = "MESSAGE\ndestination:" ++ Dest ++ "\nmessage-id:" ++ integer_to_list(rand:new()) ++ "\n\n" ++ Body ++ "\n", 
 			gen_tcp:send(Socket, list_to_binary(Message)),
 			io:format("MESSAGE sent from ~w:~n~s", [self(), Message]),
 			loop(Socket);
