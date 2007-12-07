@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="acceptance/src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="acceptance/lib/gozirra-client-0.4.1.jar"/>
+	<classpathentry kind="lib" path="acceptance/lib/junit-4.4.jar"/>
+	<classpathentry kind="output" path="acceptance/dist"/>
+</classpath>

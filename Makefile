@@ -25,11 +25,15 @@ test: compile
 			(erl -noshell -pa ${EBIN} -s $$module test -s init stop); \
 	done
 
+.PHONY: acceptance
+acceptance:
+	cd acceptance && ant
+
 $(EBIN)/%.beam: ${SRC}/%.erl
 	erlc -pa $(EBIN) -W  -o$(EBIN) $<
 
 .PHONY: clean
-clean: cleandata
+clean:
 	rm -f ${OBJECTS} erl_crash.dump src/*.beam storage/*.table
 	
 .PHONY: start

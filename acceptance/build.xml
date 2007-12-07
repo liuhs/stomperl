@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Stomperl Acceptance Tests" default="test">
+	<path id="project.class.path">
+		<fileset dir="lib">
+			<include name="**/*.jar" />
+		</fileset>
+	</path>
+
+	<target name="test" depends="clean, compile" description="Run all tests">
+		<mkdir dir="reports" />
+		<junit haltonerror="true" haltonfailure="true" fork="true">
+			<formatter type="plain" />
+			<test name="org.thoughtworkers.stomperl.acceptance.SampleClient" todir="reports" />
+			<classpath>
+				<pathelement location="dist" />
+				<path refid="project.class.path" />
+			</classpath>
+		</junit>
+	</target>
+
+	<target name="compile">
+		<mkdir dir="dist" />
+		<javac srcdir="src" destdir="dist">
+			<classpath refid="project.class.path" />
+		</javac>
+	</target>
+
+	<target name="clean">
+		<delete dir="dist" failonerror="no" />
+		<delete dir="reports" failonerror="no" />
+	</target>
+</project>
