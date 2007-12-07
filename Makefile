@@ -1,7 +1,7 @@
 EBIN = ebin
 SRC = src
 
-MODULES = tcp_server_sup tcp_acceptor tcp_client_sup tcp_stomp stomp_frame
+MODULES = tcp_server_sup tcp_acceptor tcp_client_sup tcp_stomp stomp_frame session_id subscription dets_storage
 OBJECTS = $(MODULES:%=$(EBIN)/%.beam)
 
 all: update test status
