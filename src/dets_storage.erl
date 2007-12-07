@@ -2,21 +2,29 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
--export([do/2]).
+-export([do/2, clear/1]).
 
-do(TableFile, Action) ->
-	case dets:open_file(?MODULE, [{file, TableFile}]) of
-		{ok, ?MODULE} ->
-			Action(?MODULE);
+do(Name, Action) ->
+	case dets:open_file(Name, [{file, table_file()}]) of
+		{ok, Name} ->
+			Result = Action(Name),
+			dets:close(Name),
+			Result;
 		{error,_Reason} ->
-			io:format("cannot open dets table: ~s~n", [TableFile]),
+			io:format("cannot open dets table: ~s~n", [table_file()]),
 			exit(eDetsOpen)
 	end.
+
+clear(Name) -> do(Name, fun(N) -> dets:delete_all_objects(N) end).
+
+table_file() -> "storage/1.table".
 
 %% Tests
 
 storage_test_() ->
-	TableFile = "storage/test.table",
+	clear(?MODULE),
+	do(?MODULE, fun(Name) -> dets:insert(Name, {key, value}) end),
 	[
-	?_assertMatch([], do(TableFile, fun(Module) -> dets:lookup(Module, does_not_exist) end))
+	?_assertMatch([{key, value}], do(?MODULE, fun(Name) -> dets:lookup(Name, key) end)),
+	?_assertMatch([], do(?MODULE, fun(Name) -> dets:lookup(Name, does_not_exist) end))
 	].
