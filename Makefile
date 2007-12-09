@@ -35,6 +35,7 @@ $(EBIN)/%.beam: ${SRC}/%.erl
 .PHONY: clean
 clean:
 	rm -f ${OBJECTS} erl_crash.dump src/*.beam storage/*.table
+	cd acceptance && ant clean
 	
 .PHONY: start
 start: compile

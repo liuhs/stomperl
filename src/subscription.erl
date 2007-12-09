@@ -2,39 +2,36 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
--export([subscribe/2, find_subscribers/1, unsubscribe/1, unsubscribe/2]).
+-export([subscribe/3, find_subscribers/2, unsubscribe/2, unsubscribe/3]).
 
-subscribe(Pid, Dest) -> 
-	dets_storage:do(?MODULE, fun(Module) -> dets:insert(Module, {rand:new(), Dest, Pid}) end).
+subscribe(Pid, Dest, Table) -> 
+	ets:insert(Table, {rand:new(), subscription, Dest, Pid}).
 
-find_subscribers(Dest) ->
-	Action = fun(Module) ->
-		Arrays = dets:match(Module, {'_', Dest, '$1'}),
-		lists:map(fun(Array) -> lists:nth(1, Array) end, Arrays)
-	end, 
-	dets_storage:do(?MODULE, Action).
+find_subscribers(Dest, Table) ->
+	Arrays = ets:match(Table, {'_', subscription, Dest, '$1'}),
+	lists:map(fun(Array) -> lists:nth(1, Array) end, Arrays).
 
-unsubscribe(Pid, Dest) ->
-	dets_storage:do(?MODULE, fun(Module) -> dets:match_delete(Module, {'_', Dest, Pid}) end).
+unsubscribe(Pid, Dest, Table) ->
+	ets:match_delete(Table, {'_', subscription, Dest, Pid}).
 
-unsubscribe(Pid) ->
-	dets_storage:do(?MODULE, fun(Module) -> dets:match_delete(Module, {'_', '_', Pid}) end).
+unsubscribe(Pid, Table) ->
+	ets:match_delete(Table, {'_', subscription, '_', Pid}).
 
 %% Tests
 
 setup() -> 
-	dets_storage:do(?MODULE, fun(Name) -> dets:delete_all_objects(Name) end).
+	ets:new(test, [ordered_set]).
 
 subscribe_test_() ->
-	setup(),
+	Table = setup(),
 	Pid = self(),
 	Dest = "/a",
-	subscribe(Pid, Dest),
-	OneSubscriber = find_subscribers(Dest),
-	subscribe("123", Dest),
-	TwoSubscribers = find_subscribers(Dest),
-	unsubscribe(Pid, Dest),
-	LastSubscriber = find_subscribers(Dest),
+	subscribe(Pid, Dest, Table),
+	OneSubscriber = find_subscribers(Dest, Table),
+	subscribe("123", Dest, Table),
+	TwoSubscribers = find_subscribers(Dest, Table),
+	unsubscribe(Pid, Dest, Table),
+	LastSubscriber = find_subscribers(Dest, Table),
 	[
 	?_assertMatch([Pid], OneSubscriber),
 	?_assertMatch([Pid, "123"], TwoSubscribers),
@@ -42,14 +39,14 @@ subscribe_test_() ->
 	].
 	
 unsubscribe_test_() ->
-	setup(),
+	Table = setup(),
 	Pid = self(),
-	subscribe(Pid, "/a"),
-	subscribe(anyone, "/a"),
-	subscribe(Pid, "/b"),
-	subscribe(anyone, "/b"),
-	unsubscribe(Pid),
+	subscribe(Pid, "/a", Table),
+	subscribe(anyone, "/a", Table),
+	subscribe(Pid, "/b", Table),
+	subscribe(anyone, "/b", Table),
+	unsubscribe(Pid, Table),
 	[
-	?_assertMatch([anyone], find_subscribers("/a")), 
-	?_assertMatch([anyone], find_subscribers("/b"))
+	?_assertMatch([anyone], find_subscribers("/a", Table)), 
+	?_assertMatch([anyone], find_subscribers("/b", Table))
 	].

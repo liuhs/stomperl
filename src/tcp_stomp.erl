@@ -3,35 +3,35 @@
 -include_lib("eunit/include/eunit.hrl").
 
 % External API
--export([start_link/1]). 
+-export([start_link/2]). 
 
 % Callbacks
--export([init/2, recv/2]).
+-export([init/3, recv/3]).
 
 % External API
-start_link(Socket) ->
-  proc_lib:start_link(?MODULE, init, [self(), Socket]).
+start_link(Socket, Table) ->
+  proc_lib:start_link(?MODULE, init, [self(), Socket, Table]).
 
 % Callbacks
-init(Parent, Socket) ->
+init(Parent, Socket, Table) ->
   proc_lib:init_ack(Parent, {ok, self()}),
   {ok, Mailer} = proc_lib:start_link(mailer, init, [self(), Socket]),
-  recv(Socket, Mailer).
+  recv(Socket, Mailer, Table).
 
-recv(Socket, Mailer) ->
+recv(Socket, Mailer, Table) ->
   case gen_tcp:recv(Socket, 0) of
     {ok, B} ->
 %    	io:format("GOT DATA :\n~w~n", [B]),
 			FrameText = binary_to_list(B),
       io:format("GOT FRAME:~n~s~n", [FrameText]),
-      process_frame(Socket, FrameText, Mailer),
-      recv(Socket, Mailer);
+      process_frame(Socket, FrameText, Mailer, Table),
+      recv(Socket, Mailer, Table);
     {error, closed} ->
-    	subscription:unsubscribe(Mailer),
+    	subscription:unsubscribe(Mailer, Table),
       ok
   end.
 
-process_frame(Socket, FrameText, Mailer) ->
+process_frame(Socket, FrameText, Mailer, Table) ->
 	Frame = stomp_frame:parse(FrameText),
 	io:format("[~w]FRAME COMMAND: ~s~n", [self(), stomp_frame:get_command(Frame)]),
 	case stomp_frame:get_command(Frame) of
@@ -42,12 +42,12 @@ process_frame(Socket, FrameText, Mailer) ->
 			io:format("CONNECTED: ~s~n", [SessionId]);
 		"SUBSCRIBE" ->
 			Dest = stomp_frame:get_header(Frame, "destination"),
-			subscription:subscribe(Mailer, Dest),
+			subscription:subscribe(Mailer, Dest, Table),
 			io:format("Client of ~w SUBSCRIBED ~s~n", [Mailer, Dest]);
 		"SEND" ->
 			Dest = stomp_frame:get_header(Frame, "destination"),
 			Body = stomp_frame:get_body(Frame),
-			Subscribers = subscription:find_subscribers(Dest),
+			Subscribers = subscription:find_subscribers(Dest, Table),
 			send(Subscribers, Body, Dest);
 		_Other ->
 			ok

@@ -6,7 +6,7 @@
 -include("tcp_server.hrl").
 
 % External API
--export([start_link/1, start_child/1]). 
+-export([start_link/1, start_child/2]). 
 
 % Callbacks
 -export([init/1]). 
@@ -15,8 +15,8 @@
 start_link(Module) ->
   supervisor:start_link({local, ?MODULE}, ?MODULE, [Module]).
 
-start_child(Socket) ->
-  supervisor:start_child(?MODULE, [Socket]).
+start_child(Socket, Table) ->
+  supervisor:start_child(?MODULE, [Socket, Table]).
 
 % Callbacks
 init([Module]) ->

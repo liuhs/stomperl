@@ -6,7 +6,7 @@
 -include("tcp_server.hrl").
 
 % External API
--export([start_server/0, start_link/2, stop/0]). 
+-export([start_server/0, start_link/3, stop/0]). 
 
 % Callbacks
 -export([init/1]). 
@@ -17,11 +17,11 @@
 %% start server with this method
 %% there's init logic
 start_server() ->	
-	dets_storage:clear(subscription),
-	start_link(61613, tcp_stomp).
+	Table = ets:new(storage, [set, public, {keypos, 1}]),
+	start_link(61613, tcp_stomp, Table).
 
-start_link(Port, Module) when is_integer(Port) ->
-  supervisor:start_link({local, ?MODULE}, ?MODULE, [Port, Module]).
+start_link(Port, Module, Table) when is_integer(Port) ->
+  supervisor:start_link({local, ?MODULE}, ?MODULE, [Port, Module, Table]).
 
 stop() ->
   case whereis(?MODULE) of
@@ -32,11 +32,11 @@ stop() ->
   end.
 
 % Callbacks
-init([Port, Module]) ->
+init([Port, Module, Table]) ->
   {ok, {{one_for_one, ?MAX_RESTART, ?MAX_TIME}, [
     {
       tcp_acceptor,
-      {tcp_acceptor, start_link, [Port]},
+      {tcp_acceptor, start_link, [Port, Table]},
       permanent,
       ?SHUTDOWN_WAITING_TIME,
       worker,
