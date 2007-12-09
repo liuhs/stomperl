@@ -36,7 +36,7 @@ process_frame(Socket, FrameText, Mailer, Table) ->
 	io:format("[~w]FRAME COMMAND: ~s~n", [self(), stomp_frame:get_command(Frame)]),
 	case stomp_frame:get_command(Frame) of
 		"CONNECT" ->
-			SessionId = session_id:new(),
+			SessionId = integer_to_list(rand:new()),
 			Message = "CONNECTED\nsession:" ++ SessionId ++ "\n\n\000\n",
 			gen_tcp:send(Socket, list_to_binary(Message)),
 			io:format("CONNECTED: ~s~n", [SessionId]);
