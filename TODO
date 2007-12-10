@@ -2,8 +2,11 @@
 support CONNECT (done)
 support subscription/send (done)
 support multi-frame (done)
+support UNSUBSCRIBE (done)
 
 support DISCONNECT
+support ACK
+support RECEIPT
 async subscription/send
 
 
@@ -23,6 +26,6 @@ debug text outputs need to be cleard
 
 
 == FUTURE ==
-full protocol support
+full protocol support: ERROR (anything else?)
 create an application (shall we?)
 implement Stomp with gen_fsm

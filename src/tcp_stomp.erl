@@ -45,6 +45,10 @@ process_frame(Socket, FrameText, Mailer, Table) ->
 				Dest = stomp_frame:get_header(Frame, "destination"),
 				subscription:subscribe(Mailer, Dest, Table),
 				io:format("Client of ~w SUBSCRIBED ~s~n", [Mailer, Dest]);
+			"UNSUBSCRIBE" ->
+				Dest = stomp_frame:get_header(Frame, "destination"),
+				subscription:unsubscribe(Mailer, Dest, Table),
+				io:format("Client of ~w UNSUBSCRIBED ~s~n", [Mailer, Dest]);
 			"SEND" ->
 				Dest = stomp_frame:get_header(Frame, "destination"),
 				Body = stomp_frame:get_body(Frame),

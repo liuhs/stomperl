@@ -42,6 +42,25 @@ public class SampleClient extends TestCase {
 		assertEquals("123456789", res.get("MESSAGE").toString());
 	}
 
+	public void testUnsubscribe() throws Exception {
+		Client c1 = new Client("localhost", PORT, "user1", "pass1");
+		Client c2 = new Client("localhost", PORT, "user2", "pass2");
+		
+		Map<String, StringBuffer> res = subscribe(c1, "a");
+		Thread.sleep(200);
+		
+		c2.send("a", "123");
+		Thread.sleep(200);
+
+		c1.unsubscribe("a");
+		Thread.sleep(200);
+		
+		c2.send("a", "456");
+		
+		Thread.sleep(500);
+		assertEquals("123", res.get("MESSAGE").toString());
+	}
+	
 	private Map<String, Integer> makeTxHeader() {
 		Map<String, Integer> header = new HashMap<String, Integer>();
 		header.put("transaction", 123);
