@@ -5,7 +5,13 @@ SRC_FILES = $(shell ls src/*.erl)
 MODULES = $(SRC_FILES:src/%.erl=%)
 OBJECTS = $(MODULES:%=$(EBIN)/%.beam)
 
-all: update test status
+# should run all tests (both unit and acceptance)
+# but putting server in background makes cygwin very slow
+# so only run unit tests for now
+# on linux should run something like:
+#   $ make startup &
+#   $ make test
+all: update unit_test status
 
 .PHONY: update
 update:
@@ -18,33 +24,29 @@ status: clean
 .PHONY: compile
 compile: ${OBJECTS}
 
-# this should be default task
-# but it's quite slow in cygwin
-.PHONY: fulltest
-fulltest: test
-	make start &
-	make acceptance
+$(EBIN)/%.beam: ${SRC}/%.erl
+	erlc -pa $(EBIN) -W  -o$(EBIN) $<
 
 .PHONY: test
-test: compile
+test: unit_test acceptance_test
+
+.PHONY: unit_test
+unit_test: compile
 	@for module in $(MODULES); do \
 			(echo Testing Module $$module ...); \
 			(erl -noshell -pa ${EBIN} -s $$module test -s init stop); \
 	done
 
-.PHONY: acceptance
-acceptance:
+.PHONY: acceptance_test
+acceptance_test:
 	cd acceptance && ant
 	pkill -9 erl
-
-$(EBIN)/%.beam: ${SRC}/%.erl
-	erlc -pa $(EBIN) -W  -o$(EBIN) $<
+	
+.PHONY: startup
+startup: compile
+	erl -noshell -boot start_sasl -pz ${EBIN} -s tcp_server_sup -s erlang halt
 
 .PHONY: clean
 clean:
 	rm -f ${OBJECTS} erl_crash.dump src/*.beam storage/*.table
-	cd acceptance && ant clean
-	
-.PHONY: start
-start: compile
-	erl -noshell -boot start_sasl -pa ${EBIN} -s tcp_server_sup
+	cd acceptance && ant clean	
