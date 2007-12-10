@@ -18,6 +18,13 @@ status: clean
 .PHONY: compile
 compile: ${OBJECTS}
 
+# this should be default task
+# but it's quite slow in cygwin
+.PHONY: fulltest
+fulltest: test
+	make start &
+	make acceptance
+
 .PHONY: test
 test: compile
 	@for module in $(MODULES); do \
@@ -28,6 +35,7 @@ test: compile
 .PHONY: acceptance
 acceptance:
 	cd acceptance && ant
+	pkill -9 erl
 
 $(EBIN)/%.beam: ${SRC}/%.erl
 	erlc -pa $(EBIN) -W  -o$(EBIN) $<
@@ -39,4 +47,4 @@ clean:
 	
 .PHONY: start
 start: compile
-	erl -boot start_sasl -pa ${EBIN} # -s tcp_server_sup start_server
+	erl -noshell -boot start_sasl -pa ${EBIN} -s tcp_server_sup

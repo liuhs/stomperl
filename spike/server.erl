@@ -2,6 +2,7 @@
 -compile(export_all).
 
 server() ->
+		io:format("STARTING...~n"),
     {ok, LSock} = gen_tcp:listen(61613, [binary, {packet, 0}, 
                                         {active, false}]),
     {ok, Sock} = gen_tcp:accept(LSock),
