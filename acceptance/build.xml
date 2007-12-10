@@ -28,5 +28,10 @@
 	<target name="clean">
 		<delete dir="dist" failonerror="no" />
 		<delete dir="reports" failonerror="no" />
+		<delete>
+			<fileset dir=".">
+				<include name="junit*.properties"/>
+			</fileset>
+		</delete>
 	</target>
 </project>
