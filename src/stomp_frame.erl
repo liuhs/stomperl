@@ -2,9 +2,11 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
--compile(export_all).
+-export([parse_frames/1, get_command/1, get_body/1, get_header/2]).
 
-parse(FrameText) ->
+parse(Text) -> lists:nth(1, parse_frames(Text)).
+
+parse_single_frame(FrameText) ->
 	Parts = split_frame(FrameText),
 	Envelope = lists:nth(1, Parts),
 	Body = lists:nth(2, Parts),
@@ -14,11 +16,20 @@ parse(FrameText) ->
 	Headers = parse_headers(lists:delete(Command, Tokens)),
 	{frame, Command, Headers, Body}.
 
+parse_frames(Text) ->
+	FrameTexts = lists:map(fun strip_new_line/1, extract_frames(Text)),
+	lists:map(fun parse_single_frame/1, FrameTexts).
+
 split_frame(FrameText) ->
 	SplitLocation = string:str(FrameText, "\n\n"),
-	Envelope = string:substr(FrameText, 1, SplitLocation - 1),
-	Body = string:substr(FrameText, SplitLocation + 2),
-	[Envelope, Body].
+	case SplitLocation of
+		0 ->
+			[FrameText, ""];  %% envelope only
+		_ ->
+			Envelope = string:substr(FrameText, 1, SplitLocation - 1),
+			Body = string:substr(FrameText, SplitLocation + 2),
+			[Envelope, Body]
+	end.
 
 parse_headers([]) -> [];
 parse_headers([HeaderText | Others]) ->
@@ -40,10 +51,13 @@ get_header(Frame, Key) ->
 		_Other -> {error, "frame structure error"}
 	end.
 
+extract_frames(Text) ->	string:tokens(strip_new_line(Text), "\000").
+strip_new_line(Text) -> string:strip(Text, both, $\n).
+
 %% Tests
 
 simple_frame_test_() ->
-	FrameText = "COMMAND\nname:value\nfoo:bar\n\nmessage body\n",
+	FrameText = "COMMAND\nname:value\nfoo:bar\n\nmessage\nbody\n",
 	Frame = parse(FrameText),
 	Command = get_command(Frame),
 	Headers = get_headers(Frame),
@@ -51,7 +65,7 @@ simple_frame_test_() ->
 	[
 	?_assertMatch("COMMAND", Command),
 	?_assertMatch([{"name", "value"}, {"foo", "bar"}], Headers),
-	?_assertMatch("message body\n", Body),
+	?_assertMatch("message\nbody", Body),
 	?_assertMatch(1, 1)
 	].
 
@@ -75,4 +89,32 @@ split_frame_test_() ->
 	Envelope = lists:nth(1, split_frame(FrameText)),
 	[
 	?_assertMatch("COMMAND\nname:value\nfoo:bar", Envelope)
+	].
+	
+extract_multi_frame_test_() ->
+	Text = "C1\nname:value\n\nmessage1\n\000\nC2\nfoo:bar\n\nmessage2\n\000\n",
+	[
+	?_assertMatch([_, _], extract_frames(Text)) 
+	].
+	
+parse_multi_frame_test_() ->
+	Text = "C1\nname:value\n\nmessage1\n\000\nC2\nfoo:bar\n\nmessage2\n\000\n",
+	[Frame1, Frame2] = parse_frames(Text),
+	[
+	?_assertMatch("C1", get_command(Frame1)),
+	?_assertMatch("value", get_header(Frame1, "name")),
+	?_assertMatch("message1", get_body(Frame1)),
+	?_assertMatch("C2", get_command(Frame2)),
+	?_assertMatch("bar", get_header(Frame2, "foo")),
+	?_assertMatch("message2", get_body(Frame2)),
+	?_assertMatch(1, 1)
+	].
+
+envelope_only_frame_test_() ->
+	Text = "CONNECT\npasscode:pass1\nlogin:user1",
+	Frame = parse(Text),
+	[
+	?_assertMatch("CONNECT", get_command(Frame)),
+	?_assertMatch("pass1", get_header(Frame, "passcode")),
+	?_assertMatch("user1", get_header(Frame, "login"))
 	].

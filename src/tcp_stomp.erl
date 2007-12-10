@@ -32,26 +32,29 @@ recv(Socket, Mailer, Table) ->
   end.
 
 process_frame(Socket, FrameText, Mailer, Table) ->
-	Frame = stomp_frame:parse(FrameText),
-	io:format("[~w]FRAME COMMAND: ~s~n", [self(), stomp_frame:get_command(Frame)]),
-	case stomp_frame:get_command(Frame) of
-		"CONNECT" ->
-			SessionId = integer_to_list(rand:new()),
-			Message = "CONNECTED\nsession:" ++ SessionId ++ "\n\n\000\n",
-			gen_tcp:send(Socket, list_to_binary(Message)),
-			io:format("CONNECTED: ~s~n", [SessionId]);
-		"SUBSCRIBE" ->
-			Dest = stomp_frame:get_header(Frame, "destination"),
-			subscription:subscribe(Mailer, Dest, Table),
-			io:format("Client of ~w SUBSCRIBED ~s~n", [Mailer, Dest]);
-		"SEND" ->
-			Dest = stomp_frame:get_header(Frame, "destination"),
-			Body = stomp_frame:get_body(Frame),
-			Subscribers = subscription:find_subscribers(Dest, Table),
-			send(Subscribers, Body, Dest);
-		_Other ->
-			ok
-	end.
+	Frames = stomp_frame:parse_frames(FrameText),
+	ProcessSingleFrame = fun(Frame) ->
+		io:format("[~w]FRAME COMMAND: ~s~n", [self(), stomp_frame:get_command(Frame)]),
+		case stomp_frame:get_command(Frame) of
+			"CONNECT" ->
+				SessionId = integer_to_list(rand:new()),
+				Message = "CONNECTED\nsession:" ++ SessionId ++ "\n\n\000\n",
+				gen_tcp:send(Socket, list_to_binary(Message)),
+				io:format("CONNECTED: ~s~n", [SessionId]);
+			"SUBSCRIBE" ->
+				Dest = stomp_frame:get_header(Frame, "destination"),
+				subscription:subscribe(Mailer, Dest, Table),
+				io:format("Client of ~w SUBSCRIBED ~s~n", [Mailer, Dest]);
+			"SEND" ->
+				Dest = stomp_frame:get_header(Frame, "destination"),
+				Body = stomp_frame:get_body(Frame),
+				Subscribers = subscription:find_subscribers(Dest, Table),
+				send(Subscribers, Body, Dest);
+			_Other ->
+				ok
+		end
+	end,
+	lists:map(ProcessSingleFrame, Frames).
 
 send([], _, _) -> ok;
 send([Subscriber | Others], Body, Dest) ->

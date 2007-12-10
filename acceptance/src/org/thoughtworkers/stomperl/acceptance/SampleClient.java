@@ -35,10 +35,11 @@ public class SampleClient extends TestCase {
 //		c2.begin(makeTxHeader());
 		c2.send("a", "123");
 		c2.send("a", "456");
+		c2.send("a", "789");
 //		c2.commit(makeTxHeader());
 
 		Thread.sleep(500);
-		assertEquals("123456", res.get("MESSAGE").toString());
+		assertEquals("123456789", res.get("MESSAGE").toString());
 	}
 
 	private Map<String, Integer> makeTxHeader() {

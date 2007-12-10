@@ -1,12 +1,17 @@
 == FEATURES == 
 support CONNECT (done)
 support subscription/send (done)
+support multi-frame (done)
 
-async subscription/send
 support DISCONNECT
+async subscription/send
+
+
+== HOUSECLEAN ==
 server startup script
 acceptance tests
 increase test coverage with some kind of mock
+
 
 == DEFECTS ==
 subscriptions should not be recorded in DETS (done)
@@ -15,6 +20,7 @@ currently I only support "\n" as newline, not "\r\n"
 I use {packet, raw} in gen_tcp:listen, so it doesn't support telnet access
 I use c:memory(total) as seed to create random session id
 debug text outputs need to be cleard
+
 
 == FUTURE ==
 full protocol support
