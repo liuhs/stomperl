@@ -40,6 +40,7 @@ unit_test: compile
 .PHONY: acceptance_test
 acceptance_test:
 	cd acceptance && ant
+	cd acceptance/Stomp-0.02 && make
 	pkill -9 erl
 	
 .PHONY: startup
