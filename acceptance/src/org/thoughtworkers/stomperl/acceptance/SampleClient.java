@@ -73,6 +73,14 @@ public class SampleClient extends TestCase {
 		assertTrue(client.isClosed());
 		assertFalse(client.isConnected());
 	}
+	
+	public void testAskForReceipt() throws Exception {
+		System.out.println("testAskForReceipt");
+		Client client = new Client("localhost", PORT, "user", "pass");
+		HashMap<String, String> header = new HashMap<String, String>();
+		client.sendW("test", "message needs receipt", header);
+		assertTrue(client.hasReceipt(header.get("receipt")));
+	}
 
 	private Map<String, Integer> makeTxHeader() {
 		Map<String, Integer> header = new HashMap<String, Integer>();

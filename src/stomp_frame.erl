@@ -2,7 +2,7 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
--export([parse_frames/1, get_command/1, get_body/1, get_header/2]).
+-export([parse_frames/1, get_command/1, get_body/1, get_header/2, get_header/3]).
 
 parse(Text) -> lists:nth(1, parse_frames(Text)).
 
@@ -46,9 +46,15 @@ get_header(Frame, Key) ->
 	Headers = get_headers(Frame),
 	Pairs = lists:filter(fun({K, _V}) -> K == Key end, Headers),
 	case Pairs of
-		[] -> {error, "header doesn't exist: " ++ Key}; 
+		[] -> undefined; 
 		[{_Key, Value} | _] -> Value;
-		_Other -> {error, "frame structure error"}
+		_Other -> erlang:error("frame structure error")
+	end.
+
+get_header(Frame, Key, Default) ->
+	case get_header(Frame, Key) of
+		undefined -> Default;
+		Value -> Value
 	end.
 
 extract_frames(Text) ->	string:tokens(strip_new_line(Text), "\000").
@@ -75,7 +81,8 @@ get_header_test_() ->
 	[
 	?_assertMatch("value", get_header(Frame, "name")),
 	?_assertMatch("bar", get_header(Frame, "foo")),
-	?_assertMatch({error, "header doesn't exist: not_exist"}, get_header(Frame, "not_exist"))
+	?_assertMatch(undefined, get_header(Frame, "not_exist")),
+	?_assertMatch("default", get_header(Frame, "not_exist", "default"))
 	].
 
 parse_headers_test_() ->

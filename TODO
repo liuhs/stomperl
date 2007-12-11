@@ -4,9 +4,9 @@ support subscription/send (done)
 support multi-frame (done)
 support UNSUBSCRIBE (done)
 support DISCONNECT (done)
+support RECEIPT (done)
 
 support ACK
-support RECEIPT
 async subscription/send
 
 
@@ -24,6 +24,7 @@ subscriptions should not be recorded in DETS (done)
 currently I only support "\n" as newline, not "\r\n"
 I use {packet, raw} in gen_tcp:listen, so it doesn't support telnet access
 I use c:memory(total) as seed to create random session id
+send receipt for CONNECT if the client asks for it
 
 
 == FUTURE ==

@@ -60,6 +60,13 @@ process_frame(Socket, FrameText, Mailer, Table) ->
 				send(Subscribers, Body, Dest);
 			_Other ->
 				ok
+		end,
+		case stomp_frame:get_header(Frame, "receipt") of
+			undefined -> ok;
+			ReceiptId ->
+				Receipt = "RECEIPT\nreceipt-id:" ++ ReceiptId ++ "\n\n\000\n",
+				gen_tcp:send(Socket, list_to_binary(Receipt)), 
+				io:format("RECEIPT ~s sent out~n", [ReceiptId])
 		end
 	end,
 	lists:map(ProcessSingleFrame, Frames).
