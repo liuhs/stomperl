@@ -1,0 +1,10 @@
+my environment:
+	- Cygwin
+	- Erlang/OTP R11B-5
+	- EUnit 2.0 Beta
+	- Java 6
+	- Ant 1.7.0
+
+to make it run:
+	make startup 	# console 1, should start an Erlang console
+	make test 		# console 2, should pass all tests and kill the Erlang process in console 1
