@@ -1,3 +1,5 @@
+current version: 0.0.1 - first preview release
+
 == FEATURES == 
 support CONNECT (done)
 support subscription/send (done)
@@ -6,8 +8,8 @@ support UNSUBSCRIBE (done)
 support DISCONNECT (done)
 support RECEIPT (done)
 
+async subscription/send: what should the broker do if nowhere to SEND or doesn't get ACK?
 support ACK
-async subscription/send
 
 
 == HOUSECLEAN ==
@@ -28,6 +30,7 @@ send receipt for CONNECT if the client asks for it
 
 
 == FUTURE ==
+compatibility test fixture
 full protocol support: ERROR (anything else?)
 create an application (shall we?)
 implement Stomp with gen_fsm
