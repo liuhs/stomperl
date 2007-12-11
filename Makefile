@@ -44,7 +44,7 @@ acceptance_test:
 	
 .PHONY: startup
 startup: compile
-	erl -noshell -boot start_sasl -pz ${EBIN} -s tcp_server_sup -s erlang halt
+	erl -boot start_sasl -pz ${EBIN} -s tcp_server_sup -s erlang halt
 
 .PHONY: clean
 clean:

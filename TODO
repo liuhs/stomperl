@@ -3,8 +3,8 @@ support CONNECT (done)
 support subscription/send (done)
 support multi-frame (done)
 support UNSUBSCRIBE (done)
+support DISCONNECT (done)
 
-support DISCONNECT
 support ACK
 support RECEIPT
 async subscription/send

@@ -41,6 +41,10 @@ process_frame(Socket, FrameText, Mailer, Table) ->
 				Message = "CONNECTED\nsession:" ++ SessionId ++ "\n\n\000\n",
 				gen_tcp:send(Socket, list_to_binary(Message)),
 				io:format("CONNECTED: ~s~n", [SessionId]);
+			"DISCONNECT" ->
+				subscription:unsubscribe(Mailer, Table),
+				gen_tcp:close(Socket),
+				io:format("DISCONNECTED: mailer ~w~n", [Mailer]);
 			"SUBSCRIBE" ->
 				Dest = stomp_frame:get_header(Frame, "destination"),
 				subscription:subscribe(Mailer, Dest, Table),

@@ -64,6 +64,15 @@ public class SampleClient extends TestCase {
 		Thread.sleep(500);
 		assertEquals("123456789", res.get("MESSAGE").toString());
 	}
+	
+	public void testDisconnect() throws Exception {
+		System.out.println("testDisconnect");
+		Client client = new Client("localhost", PORT, "user", "pass");
+		assertTrue(client.isConnected());
+		client.disconnect();
+		assertTrue(client.isClosed());
+		assertFalse(client.isConnected());
+	}
 
 	private Map<String, Integer> makeTxHeader() {
 		Map<String, Integer> header = new HashMap<String, Integer>();
