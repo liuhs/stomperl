@@ -1,0 +1,8 @@
+== 0.0.1 - first preview release (REV 33) ==
+
+support CONNECT
+support SUBSCRIBE/SEND
+support multi-frame
+support UNSUBSCRIBE
+support DISCONNECT
+support RECEIPT
