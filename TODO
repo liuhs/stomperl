@@ -14,10 +14,10 @@ support ACK
 
 == HOUSECLEAN ==
 server startup script (done)
+debug text outputs need to be cleard (done)
 
 fully automate acceptance tests
 increase test coverage with some kind of mock
-debug text outputs need to be cleard
 
 
 == DEFECTS ==

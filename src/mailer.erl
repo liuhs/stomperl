@@ -10,13 +10,13 @@ init(Parent, Socket) ->
 loop(Socket) ->
 	receive
 		{send, Body, Dest} ->
-			io:format("Sending message to ~s from ~w~n", [Dest, self()]),
+			log:debug("Sending message to ~s from ~w~n", [Dest, self()]),
 			Message = "MESSAGE\ndestination:" ++ Dest ++ "\nmessage-id:" ++ integer_to_list(rand:new()) ++ "\n\n" ++ Body ++ "\000\n", 
 			gen_tcp:send(Socket, list_to_binary(Message)),
-			io:format("MESSAGE sent from ~w:~n~s", [self(), Message]),
+			log:debug("MESSAGE sent from ~w:~n~s", [self(), Message]),
 			loop(Socket);
 		Other ->
-			io:format("I don't know how to handle this: ~p~n", [Other]),
+			log:debug("I don't know how to handle this: ~p~n", [Other]),
 			loop(Socket)
 	end.
 

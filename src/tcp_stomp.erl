@@ -21,9 +21,9 @@ init(Parent, Socket, Table) ->
 recv(Socket, Mailer, Table) ->
   case gen_tcp:recv(Socket, 0) of
     {ok, B} ->
-%    	io:format("GOT DATA :\n~w~n", [B]),
+%    	log:debug("GOT DATA :\n~w~n", [B]),
 			FrameText = binary_to_list(B),
-      io:format("GOT FRAME:~n~s~n", [FrameText]),
+      log:debug("GOT FRAME:~n~s~n", [FrameText]),
       process_frame(Socket, FrameText, Mailer, Table),
       recv(Socket, Mailer, Table);
     {error, closed} ->
@@ -34,25 +34,25 @@ recv(Socket, Mailer, Table) ->
 process_frame(Socket, FrameText, Mailer, Table) ->
 	Frames = stomp_frame:parse_frames(FrameText),
 	ProcessSingleFrame = fun(Frame) ->
-		io:format("[~w]FRAME COMMAND: ~s~n", [self(), stomp_frame:get_command(Frame)]),
+		log:debug("[~w]FRAME COMMAND: ~s~n", [self(), stomp_frame:get_command(Frame)]),
 		case stomp_frame:get_command(Frame) of
 			"CONNECT" ->
 				SessionId = integer_to_list(rand:new()),
 				Message = "CONNECTED\nsession:" ++ SessionId ++ "\n\n\000\n",
 				gen_tcp:send(Socket, list_to_binary(Message)),
-				io:format("CONNECTED: ~s~n", [SessionId]);
+				log:debug("CONNECTED: ~s~n", [SessionId]);
 			"DISCONNECT" ->
 				subscription:unsubscribe(Mailer, Table),
 				gen_tcp:close(Socket),
-				io:format("DISCONNECTED: mailer ~w~n", [Mailer]);
+				log:debug("DISCONNECTED: mailer ~w~n", [Mailer]);
 			"SUBSCRIBE" ->
 				Dest = stomp_frame:get_header(Frame, "destination"),
 				subscription:subscribe(Mailer, Dest, Table),
-				io:format("Client of ~w SUBSCRIBED ~s~n", [Mailer, Dest]);
+				log:debug("Client of ~w SUBSCRIBED ~s~n", [Mailer, Dest]);
 			"UNSUBSCRIBE" ->
 				Dest = stomp_frame:get_header(Frame, "destination"),
 				subscription:unsubscribe(Mailer, Dest, Table),
-				io:format("Client of ~w UNSUBSCRIBED ~s~n", [Mailer, Dest]);
+				log:debug("Client of ~w UNSUBSCRIBED ~s~n", [Mailer, Dest]);
 			"SEND" ->
 				Dest = stomp_frame:get_header(Frame, "destination"),
 				Body = stomp_frame:get_body(Frame),
@@ -66,14 +66,14 @@ process_frame(Socket, FrameText, Mailer, Table) ->
 			ReceiptId ->
 				Receipt = "RECEIPT\nreceipt-id:" ++ ReceiptId ++ "\n\n\000\n",
 				gen_tcp:send(Socket, list_to_binary(Receipt)), 
-				io:format("RECEIPT ~s sent out~n", [ReceiptId])
+				log:debug("RECEIPT ~s sent out~n", [ReceiptId])
 		end
 	end,
 	lists:map(ProcessSingleFrame, Frames).
 
 send([], _, _) -> ok;
 send([Subscriber | Others], Body, Dest) ->
-	io:format("SUBCSRIBER: ~w~n", [Subscriber]),
+	log:debug("SUBCSRIBER: ~w~n", [Subscriber]),
 	Subscriber ! {send, Body, Dest},
 	send(Others, Body, Dest).
 
