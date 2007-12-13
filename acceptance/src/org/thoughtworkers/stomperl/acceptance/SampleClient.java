@@ -25,6 +25,28 @@ public class SampleClient extends TestCase {
 		return res;
 	}
 
+	public void testTalkToExistingServer() throws Exception {
+		System.out.println("testTalkToExistingServer");
+		
+		Client c1 = new Client("localhost", PORT, "user1", "pass1");
+		Client c2 = new Client("localhost", PORT, "user2", "pass2");
+		
+		Map<String, StringBuffer> res = subscribe(c1, "a");
+		Thread.sleep(200);
+
+		c2.begin();
+		c2.send("a", "123");
+		c2.send("a", "456");
+		c2.send("a", "789");
+		c2.commit();
+
+		Thread.sleep(500);
+		assertEquals("123456789", res.get("MESSAGE").toString());
+		
+		c1.disconnect();
+		c2.disconnect();
+	}
+	
 	public void testTransaction() throws Exception {
 		System.out.println("testTransaction");
 		
@@ -48,6 +70,9 @@ public class SampleClient extends TestCase {
 		
 		Thread.sleep(500);
 		assertEquals("123456789", res.get("MESSAGE").toString());
+		
+		c1.disconnect();
+		c2.disconnect();
 	}
 	
 	public void testUnsubscribe() throws Exception {
@@ -69,6 +94,9 @@ public class SampleClient extends TestCase {
 		
 		Thread.sleep(500);
 		assertEquals("123", res.get("MESSAGE").toString());
+		
+		c1.disconnect();
+		c2.disconnect();
 	}
 	
 	public void testDisconnect() throws Exception {
@@ -86,25 +114,7 @@ public class SampleClient extends TestCase {
 		HashMap<String, String> header = new HashMap<String, String>();
 		client.sendW("test", "message needs receipt", header);
 		assertTrue(client.hasReceipt(header.get("receipt")));
+		client.disconnect();
 	}
 
-	public void testTalkToExistingServer() throws Exception {
-		System.out.println("testTalkToExistingServer");
-		
-		Client c1 = new Client("localhost", PORT, "user1", "pass1");
-		Client c2 = new Client("localhost", PORT, "user2", "pass2");
-		
-		Map<String, StringBuffer> res = subscribe(c1, "a");
-		Thread.sleep(200);
-
-		c2.begin();
-		c2.send("a", "123");
-		c2.send("a", "456");
-		c2.send("a", "789");
-		c2.commit();
-
-		Thread.sleep(500);
-		assertEquals("123456789", res.get("MESSAGE").toString());
-	}
-	
 }
