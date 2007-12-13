@@ -2,7 +2,8 @@ current version: 0.0.2
 
 
 == FEATURES == 
-support transaction: not atomic yet
+support transaction (done)
+
 async subscription/send: what should the broker do if nowhere to SEND or doesn't get ACK?
 support ACK
 
@@ -13,6 +14,7 @@ increase test coverage with some kind of mock
 
 
 == DEFECTS ==
+transaction is not atomic: subscribers are not guaranteed receiving all-or-not
 currently I only support "\n" as newline, not "\r\n"
 I use {packet, raw} in gen_tcp:listen, so it doesn't support telnet access
 I use c:memory(total) as seed to create random session id

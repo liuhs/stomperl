@@ -55,7 +55,7 @@ process_frame(Socket, FrameText, Mailer, Table) ->
 				log:debug("Client of ~w UNSUBSCRIBED ~s~n", [Mailer, Dest]);
 			"SEND" ->
 				case transaction:is_in_transaction() of
-					false -> send([Frame], Table);
+					false -> mailer:send([Frame], Table);
 					true ->	transaction:add_frame(Frame)
 				end;
 			"BEGIN" ->
@@ -66,7 +66,7 @@ process_frame(Socket, FrameText, Mailer, Table) ->
 				TransactionId = stomp_frame:get_header(Frame, "transaction", "transaction_id"),
 				log:debug("COMMIT transaction ~s~n", [TransactionId]),
 				FramesInTx = transaction:commit(TransactionId),
-				send(FramesInTx, Table);
+				mailer:send(FramesInTx, Table);
 			"ABORT" ->
 				TransactionId = stomp_frame:get_header(Frame, "transaction", "transaction_id"),
 				transaction:abort(TransactionId),
@@ -85,19 +85,6 @@ process_frame(Socket, FrameText, Mailer, Table) ->
 	end,
 	lists:map(ProcessSingleFrame, Frames).
 
-send([], _Table) -> ok;
-send([Frame | Others], Table) ->
-	Dest = stomp_frame:get_header(Frame, "destination"),
-	Body = stomp_frame:get_body(Frame),
-	Subscribers = subscription:find_subscribers(Dest, Table),
-	send(Subscribers, Body, Dest),
-	send(Others, Table).
-
-send([], _, _) -> ok;
-send([Subscriber | Others], Body, Dest) ->
-	log:debug("SUBCSRIBER: ~w~n", [Subscriber]),
-	Subscriber ! {send, Body, Dest},
-	send(Others, Body, Dest).
 
 %% Tests
 

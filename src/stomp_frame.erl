@@ -2,7 +2,7 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
--export([parse_frames/1, get_command/1, get_body/1, get_header/2, get_header/3]).
+-export([parse_frames/1, get_command/1, get_body/1, get_header/2, get_header/3, new/3, to_text/1]).
 
 parse(Text) -> lists:nth(1, parse_frames(Text)).
 
@@ -59,6 +59,18 @@ get_header(Frame, Key, Default) ->
 
 extract_frames(Text) ->	string:tokens(strip_new_line(Text), "\000").
 strip_new_line(Text) -> string:strip(Text, both, $\n).
+
+new(Command, Headers, Body) -> {frame, Command, Headers, Body}.
+to_text({frame, Command, Headers, Body}) ->
+	Command ++ "\n" ++ headers_to_text(Headers) ++ "\n" ++ Body ++ "\000\n".
+
+header_to_text({Key, Value}) -> Key ++ ":" ++ Value ++ "\n".
+
+headers_to_text([]) -> "";
+headers_to_text([Header | Others]) -> header_to_text(Header) ++ headers_to_text(Others).
+
+frames_to_text([]) -> "";
+frames_to_text([Frame | Others]) -> to_text(Frame) ++ frames_to_text(Others).
 
 %% Tests
 
@@ -124,4 +136,27 @@ envelope_only_frame_test_() ->
 	?_assertMatch("CONNECT", get_command(Frame)),
 	?_assertMatch("pass1", get_header(Frame, "passcode")),
 	?_assertMatch("user1", get_header(Frame, "login"))
+	].
+	
+create_frame_test_() ->
+	Frame = new("COMMAND", [{"key", "value"}, {"foo", "bar"}], "message body"),
+	[
+	?_assertMatch("COMMAND", get_command(Frame)),
+	?_assertMatch("value", get_header(Frame, "key")),
+	?_assertMatch("bar", get_header(Frame, "foo")),
+	?_assertMatch("message body", get_body(Frame))
+	].
+	
+frame_to_text_test_() ->
+	Frame = new("COMMAND", [{"key", "value"}, {"foo", "bar"}], "message body"),
+	Text = to_text(Frame),
+	[
+	?_assertMatch(Frame, parse(Text))
+	].
+	
+frames_to_text_test_() ->
+	Text = "C1\nname:value\n\nmessage1\000\nC2\nfoo:bar\n\nmessage2\000\n",
+	Frames = parse_frames(Text),
+	[
+	?_assertMatch(Text, frames_to_text(Frames))
 	].
