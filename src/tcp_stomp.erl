@@ -15,23 +15,24 @@ start_link(Socket, Table) ->
 % Callbacks
 init(Parent, Socket, Table) ->
   proc_lib:init_ack(Parent, {ok, self()}),
-  {ok, Mailer} = proc_lib:start_link(mailer, init, [self(), Socket]),
-  recv(Socket, Mailer, Table).
+	SocketWrapper = socket_wrapper:new(Socket),
+  {ok, Mailer} = proc_lib:start_link(mailer, init, [self(), SocketWrapper]),
+  recv(SocketWrapper, Mailer, Table).
 
-recv(Socket, Mailer, Table) ->
-  case gen_tcp:recv(Socket, 0) of
+recv(SocketWrapper, Mailer, Table) ->
+  case socket_wrapper:recv(SocketWrapper, 0) of
     {ok, B} ->
 %    	log:debug("GOT DATA :\n~w~n", [B]),
 			FrameText = binary_to_list(B),
       log:debug("GOT FRAME:~n~s~n", [FrameText]),
-      process_frame(Socket, FrameText, Mailer, Table),
-      recv(Socket, Mailer, Table);
+      process_frame(SocketWrapper, FrameText, Mailer, Table),
+      recv(SocketWrapper, Mailer, Table);
     {error, closed} ->
     	subscription:unsubscribe(Mailer, Table),
       ok
   end.
 
-process_frame(Socket, FrameText, Mailer, Table) ->
+process_frame(SocketWrapper, FrameText, Mailer, Table) ->
 	Frames = stomp_frame:parse_frames(FrameText),
 	ProcessSingleFrame = fun(Frame) ->
 		log:debug("[~w]FRAME COMMAND: ~s~n", [self(), stomp_frame:get_command(Frame)]),
@@ -39,11 +40,11 @@ process_frame(Socket, FrameText, Mailer, Table) ->
 			"CONNECT" ->
 				SessionId = integer_to_list(rand:new()),
 				Message = "CONNECTED\nsession:" ++ SessionId ++ "\n\n\000\n",
-				gen_tcp:send(Socket, list_to_binary(Message)),
+				socket_wrapper:send(SocketWrapper, list_to_binary(Message)),
 				log:debug("CONNECTED: ~s~n", [SessionId]);
 			"DISCONNECT" ->
 				subscription:unsubscribe(Mailer, Table),
-				gen_tcp:close(Socket),
+				socket_wrapper:close(SocketWrapper),
 				log:debug("DISCONNECTED: mailer ~w~n", [Mailer]);
 			"SUBSCRIBE" ->
 				Dest = stomp_frame:get_header(Frame, "destination"),
@@ -79,7 +80,7 @@ process_frame(Socket, FrameText, Mailer, Table) ->
 			undefined -> ok;
 			ReceiptId ->
 				Receipt = "RECEIPT\nreceipt-id:" ++ ReceiptId ++ "\n\n\000\n",
-				gen_tcp:send(Socket, list_to_binary(Receipt)), 
+				socket_wrapper:send(SocketWrapper, list_to_binary(Receipt)), 
 				log:debug("RECEIPT ~s sent out~n", [ReceiptId])
 		end
 	end,

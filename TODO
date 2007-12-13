@@ -9,8 +9,10 @@ support ACK
 
 
 == HOUSECLEAN ==
+create stub for socket (done)
+
+add tests for tcp_stomp with stubbed socket
 fully automate acceptance tests / continuous integration
-increase test coverage with some kind of mock
 
 
 == DEFECTS ==
