@@ -54,11 +54,25 @@ process_frame(Socket, FrameText, Mailer, Table) ->
 				subscription:unsubscribe(Mailer, Dest, Table),
 				log:debug("Client of ~w UNSUBSCRIBED ~s~n", [Mailer, Dest]);
 			"SEND" ->
-				Dest = stomp_frame:get_header(Frame, "destination"),
-				Body = stomp_frame:get_body(Frame),
-				Subscribers = subscription:find_subscribers(Dest, Table),
-				send(Subscribers, Body, Dest);
+				case transaction:is_in_transaction() of
+					false -> send([Frame], Table);
+					true ->	transaction:add_frame(Frame)
+				end;
+			"BEGIN" ->
+				TransactionId = stomp_frame:get_header(Frame, "transaction", "transaction_id"),
+				transaction:new(TransactionId),
+				log:debug("BEGIN transaction ~s~n", [TransactionId]);
+			"COMMIT" ->
+				TransactionId = stomp_frame:get_header(Frame, "transaction", "transaction_id"),
+				log:debug("COMMIT transaction ~s~n", [TransactionId]),
+				FramesInTx = transaction:commit(TransactionId),
+				send(FramesInTx, Table);
+			"ABORT" ->
+				TransactionId = stomp_frame:get_header(Frame, "transaction", "transaction_id"),
+				transaction:abort(TransactionId),
+				log:debug("ABORT transaction ~s~n", [TransactionId]);
 			_Other ->
+				log:debug("~s is unsupported command~n", [stomp_frame:get_command(Frame)]),
 				ok
 		end,
 		case stomp_frame:get_header(Frame, "receipt") of
@@ -70,6 +84,14 @@ process_frame(Socket, FrameText, Mailer, Table) ->
 		end
 	end,
 	lists:map(ProcessSingleFrame, Frames).
+
+send([], _Table) -> ok;
+send([Frame | Others], Table) ->
+	Dest = stomp_frame:get_header(Frame, "destination"),
+	Body = stomp_frame:get_body(Frame),
+	Subscribers = subscription:find_subscribers(Dest, Table),
+	send(Subscribers, Body, Dest),
+	send(Others, Table).
 
 send([], _, _) -> ok;
 send([Subscriber | Others], Body, Dest) ->

@@ -2,6 +2,7 @@ current version: 0.0.2
 
 
 == FEATURES == 
+support transaction: not atomic yet
 async subscription/send: what should the broker do if nowhere to SEND or doesn't get ACK?
 support ACK
 

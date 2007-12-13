@@ -25,6 +25,31 @@ public class SampleClient extends TestCase {
 		return res;
 	}
 
+	public void testTransaction() throws Exception {
+		System.out.println("testTransaction");
+		
+		Client c1 = new Client("localhost", PORT, "user1", "pass1");
+		Client c2 = new Client("localhost", PORT, "user2", "pass2");
+		
+		Map<String, StringBuffer> res = subscribe(c1, "a");
+		Thread.sleep(200);
+		
+		c2.begin();
+		c2.send("a", "123");
+		c2.send("a", "456");
+		c2.send("a", "789");
+		c2.commit();
+		
+		c2.begin();
+		c2.send("a", "123");
+		c2.send("a", "456");
+		c2.send("a", "789");
+		c2.abort();
+		
+		Thread.sleep(500);
+		assertEquals("123456789", res.get("MESSAGE").toString());
+	}
+	
 	public void testUnsubscribe() throws Exception {
 		System.out.println("testUnsubscribe");
 
@@ -46,25 +71,6 @@ public class SampleClient extends TestCase {
 		assertEquals("123", res.get("MESSAGE").toString());
 	}
 	
-	public void testTalkToExistingServer() throws Exception {
-		System.out.println("testTalkToExistingServer");
-		
-		Client c1 = new Client("localhost", PORT, "user1", "pass1");
-		Client c2 = new Client("localhost", PORT, "user2", "pass2");
-		
-		Map<String, StringBuffer> res = subscribe(c1, "a");
-		Thread.sleep(200);
-
-		c2.begin(makeTxHeader());
-		c2.send("a", "123");
-		c2.send("a", "456");
-		c2.send("a", "789");
-		c2.commit(makeTxHeader());
-
-		Thread.sleep(500);
-		assertEquals("123456789", res.get("MESSAGE").toString());
-	}
-	
 	public void testDisconnect() throws Exception {
 		System.out.println("testDisconnect");
 		Client client = new Client("localhost", PORT, "user", "pass");
@@ -82,9 +88,23 @@ public class SampleClient extends TestCase {
 		assertTrue(client.hasReceipt(header.get("receipt")));
 	}
 
-	private Map<String, Integer> makeTxHeader() {
-		Map<String, Integer> header = new HashMap<String, Integer>();
-		header.put("transaction", 123);
-		return header;
+	public void testTalkToExistingServer() throws Exception {
+		System.out.println("testTalkToExistingServer");
+		
+		Client c1 = new Client("localhost", PORT, "user1", "pass1");
+		Client c2 = new Client("localhost", PORT, "user2", "pass2");
+		
+		Map<String, StringBuffer> res = subscribe(c1, "a");
+		Thread.sleep(200);
+
+		c2.begin();
+		c2.send("a", "123");
+		c2.send("a", "456");
+		c2.send("a", "789");
+		c2.commit();
+
+		Thread.sleep(500);
+		assertEquals("123456789", res.get("MESSAGE").toString());
 	}
+	
 }
