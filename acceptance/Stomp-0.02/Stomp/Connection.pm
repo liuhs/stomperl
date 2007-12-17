@@ -143,7 +143,7 @@ sub Disconnect($$$)
 {
     my $self=shift;
     my $socket = $self->{"socket"};
-    $self->_transmit( "Disconnect", { session=> $self->{"session"} });
+    $self->_transmit( "DISCONNECT", { session=> $self->{"session"} });
     $socket->shutdown( 1 );
     $self->{"socket"}=undef;
 }
