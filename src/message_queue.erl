@@ -2,6 +2,8 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
+-export([is_queue/1]).
+
 is_queue([$q, $u, $e, $u, $e, $: | _Name]) -> true;
 is_queue(_Dest) -> false.
 

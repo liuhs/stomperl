@@ -17,7 +17,7 @@
 %% start server with this method
 %% there's init logic
 start() ->	
-	Table = ets:new(storage, [set, public, {keypos, 1}]),
+	Table = ets:new(storage, [ordered_set, public, {keypos, 1}]),
 	start_link(61613, tcp_stomp, Table),
 	receive _ -> ok end.	
 

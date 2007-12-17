@@ -4,9 +4,9 @@ current version: 0.0.2
 == FEATURES == 
 support transaction (done)
 support ERROR for unknown commands and invalid SEND (done)
+determine destination as queue if its name starts with "queue:" (default destinations are topics) (done)
 
-treat destination as queue if its name starts with "queue:" (default destinations are topics)
-send message only to first subscriber of a queue
+send message from mailer only to first subscriber of a queue
 support ACK for queues
 message persistence and resend for queues
 
