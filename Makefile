@@ -49,5 +49,5 @@ startup: compile
 
 .PHONY: clean
 clean:
-	rm -f ${OBJECTS} erl_crash.dump src/*.beam storage/*.table
+	rm -f ebin/*.beam erl_crash.dump src/*.beam storage/*.table
 	cd acceptance && ant clean	
