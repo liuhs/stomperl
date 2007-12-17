@@ -1,10 +1,13 @@
 package org.thoughtworkers.stomperl.acceptance;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import junit.framework.TestCase;
 import net.ser1.stomp.Client;
+import net.ser1.stomp.Command;
 import net.ser1.stomp.Listener;
 import net.ser1.stomp.Stomp;
 
@@ -116,5 +119,49 @@ public class SampleClient extends TestCase {
 		assertTrue(client.hasReceipt(header.get("receipt")));
 		client.disconnect();
 	}
+	
+	public void testGetErrorFromServerForInvalidSend() throws Exception {
+		System.out.println("testGetErrorFromServerForInvalidSend");
+		Client client = new Client("localhost", PORT, "user", "pass");
+		HashMap<String, String> header = new HashMap<String, String>();
+		header.put("destined", "a");
+		final List<String> errors = new ArrayList<String>();
+		
+		client.addErrorListener(new Listener(){
+			@SuppressWarnings("unchecked")
+			public void message(Map headers, String body) {
+				System.out.println("GOT ERROR : " + headers.get("message"));
+				errors.add(body);
+			}
+		});
+		
+		client.transmit(Command.SEND, header, "Hi");
+		Thread.sleep(300);
+		client.disconnect();
+		
+		assertEquals(1, errors.size());
+		System.out.println(errors.get(0));
+	}
 
+	public void testGetErrorFromServerForUnsupportedCommand() throws Exception {
+		System.out.println("testGetErrorFromServerForUnsupportedCommand");
+		Client client = new Client("localhost", PORT, "user", "pass");
+		final List<String> errors = new ArrayList<String>();
+		
+		client.addErrorListener(new Listener(){
+			@SuppressWarnings("unchecked")
+			public void message(Map headers, String body) {
+				System.out.println("GOT ERROR : " + headers.get("message"));
+				errors.add(body);
+			}
+		});
+		
+		client.transmit(Command.ERROR, null, "Hello");
+		Thread.sleep(300);
+		client.disconnect();
+		
+		assertEquals(1, errors.size());
+		System.out.println(errors.get(0));
+	}
+	
 }

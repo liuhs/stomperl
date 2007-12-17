@@ -55,9 +55,13 @@ process_frame(SocketWrapper, FrameText, Mailer, Table) ->
 				subscription:unsubscribe(Mailer, Dest, Table),
 				log:debug("Client of ~w UNSUBSCRIBED ~s~n", [Mailer, Dest]);
 			"SEND" ->
-				case transaction:is_in_transaction() of
-					false -> mailer:send([Frame], Table);
-					true ->	transaction:add_frame(Frame)
+				case stomp_frame:get_header(Frame, "destination") of
+					undefined -> error(SocketWrapper, "destination not specified", FrameText);
+					_ ->
+						case transaction:is_in_transaction() of
+							false -> mailer:send([Frame], Table);
+							true ->	transaction:add_frame(Frame)
+						end
 				end;
 			"BEGIN" ->
 				TransactionId = stomp_frame:get_header(Frame, "transaction", "transaction_id"),
@@ -73,8 +77,9 @@ process_frame(SocketWrapper, FrameText, Mailer, Table) ->
 				transaction:abort(TransactionId),
 				log:debug("ABORT transaction ~s~n", [TransactionId]);
 			_Other ->
-				log:debug("~s is unsupported command~n", [stomp_frame:get_command(Frame)]),
-				ok
+				ErrorMessage = stomp_frame:get_command(Frame) ++ " is unsupported command",
+				log:debug("~s~n", [ErrorMessage]),
+				error(SocketWrapper, ErrorMessage, FrameText)
 		end,
 		case stomp_frame:get_header(Frame, "receipt") of
 			undefined -> ok;
@@ -86,10 +91,22 @@ process_frame(SocketWrapper, FrameText, Mailer, Table) ->
 	end,
 	lists:map(ProcessSingleFrame, Frames).
 
+error(SocketWrapper, Message, Text) ->
+	ErrorFrame = stomp_frame:new("ERROR", [{"message", Message}], Text),
+	socket_wrapper:send(SocketWrapper, list_to_binary(stomp_frame:to_text(ErrorFrame))),
+	log:debug("ERROR: ~s~n", [Message]).
 
 %% Tests
 
-truth_test_() ->
+report_error_test_() ->
+	Text = "Test",
+	Message = "test error",
+	SocketWrapper = socket_wrapper:test_new(),
+	error(SocketWrapper, Message, Text),
+	[SentMessage | _] = socket_wrapper:get_sent_messages(SocketWrapper),
+	[MessageFrame] = stomp_frame:parse_frames(SentMessage),	
 	[
-	?_assertMatch(1, 1)
+	?_assertMatch("ERROR", stomp_frame:get_command(MessageFrame)),
+	?_assertMatch(Message, stomp_frame:get_header(MessageFrame, "message")),
+	?_assertMatch(Text, stomp_frame:get_body(MessageFrame))
 	].

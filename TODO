@@ -3,8 +3,12 @@ current version: 0.0.2
 
 == FEATURES == 
 support transaction (done)
+support ERROR for unknown commands and invalid SEND (done)
 
-support ERROR
+treat destination as queue if its name starts with "queue:" (default destinations are topics)
+send message only to first subscriber of a queue
+support ACK for queues
+message persistence and resend for queues
 
 
 == HOUSECLEAN ==
@@ -23,8 +27,6 @@ send receipt for CONNECT if the client asks for it
 
 
 == FUTURE ==
-queue subscription/send
-support ACK
 compatibility test fixture
 full protocol support: what's left?
 create an application (shall we?)
