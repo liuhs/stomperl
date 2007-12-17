@@ -4,8 +4,7 @@ current version: 0.0.2
 == FEATURES == 
 support transaction (done)
 
-async subscription/send: what should the broker do if nowhere to SEND or doesn't get ACK?
-support ACK
+support ERROR
 
 
 == HOUSECLEAN ==
@@ -24,7 +23,9 @@ send receipt for CONNECT if the client asks for it
 
 
 == FUTURE ==
+queue subscription/send
+support ACK
 compatibility test fixture
-full protocol support: ERROR (anything else?)
+full protocol support: what's left?
 create an application (shall we?)
 implement Stomp with gen_fsm
