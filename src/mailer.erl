@@ -3,6 +3,7 @@
 
 -export([init/2, send/2, send/3]).
 
+%% APIs
 init(Parent, SocketWrapper) ->
 	proc_lib:init_ack(Parent, {ok, self()}),
 	loop(SocketWrapper).
@@ -12,24 +13,46 @@ send([Frame | Others], Table) ->
 	Dest = stomp_frame:get_header(Frame, "destination"),
 	Body = stomp_frame:get_body(Frame),
 	Subscribers = subscription:find_subscribers(Dest, Table),
-	send(Subscribers, Body, Dest),
+	case message_queue:is_queue(Dest) of 
+		true ->
+			message_queue:produce(Table, Dest, Body),
+			notify(Subscribers, Dest, Table);
+		false -> send(Subscribers, Body, Dest)
+	end,
 	send(Others, Table).
 
 send([], _, _) -> ok;
 send([Subscriber | Others], Body, Dest) ->
-	log:debug("SUBCSRIBER: ~w~n", [Subscriber]),
+	log:debug("Sending to subscriber: ~w~n", [Subscriber]),
 	Subscriber ! {send, Body, Dest},
 	send(Others, Body, Dest).
 
-	
+notify([], _, _) -> ok;
+notify([Subscriber | Others], Dest, Table) ->
+	log:debug("Notifying subscriber: ~w~n", [Subscriber]),
+	Subscriber ! {notify, Dest, Table},
+	notify(Others, Dest, Table).
+
+%% Mailer process
 loop(SocketWrapper) ->
 	receive
 		{send, Body, Dest} ->
 			send_to_socket(SocketWrapper, Body, Dest),
 			loop(SocketWrapper);
+		{notify, Dest, Table} ->
+			check_queue(SocketWrapper, Table, Dest),
+			loop(SocketWrapper);
 		Other ->
 			log:debug("I don't know how to handle this: ~p~n", [Other]),
 			loop(SocketWrapper)
+	end.
+
+check_queue(SocketWrapper, Table, Dest) ->
+	case message_queue:consume(Table, Dest) of
+		undefined -> ok;
+		Message -> 
+			send_to_socket(SocketWrapper, Message, Dest),
+			check_queue(SocketWrapper, Table, Dest)
 	end.
 
 send_to_socket(SocketWrapper, Body, Dest) ->

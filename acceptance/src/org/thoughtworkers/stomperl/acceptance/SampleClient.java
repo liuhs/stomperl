@@ -83,8 +83,10 @@ public class SampleClient extends TestCase {
 
 		Client c1 = new Client("localhost", PORT, "user1", "pass1");
 		Client c2 = new Client("localhost", PORT, "user2", "pass2");
+		Client c3 = new Client("localhost", PORT, "user3", "pass3");
 		
-		Map<String, StringBuffer> res = subscribe(c1, "a");
+		Map<String, StringBuffer> res1 = subscribe(c1, "a");
+		Map<String, StringBuffer> res3 = subscribe(c3, "a");
 		Thread.sleep(200);
 		
 		c2.send("a", "123");
@@ -96,10 +98,12 @@ public class SampleClient extends TestCase {
 		c2.send("a", "456");
 		
 		Thread.sleep(500);
-		assertEquals("123", res.get("MESSAGE").toString());
+		assertEquals("123", res1.get("MESSAGE").toString());
+		assertEquals("123456", res3.get("MESSAGE").toString());
 		
 		c1.disconnect();
 		c2.disconnect();
+		c3.disconnect();
 	}
 	
 	public void testDisconnect() throws Exception {
@@ -164,4 +168,32 @@ public class SampleClient extends TestCase {
 		System.out.println(errors.get(0));
 	}
 	
+	public void testUsingQueue() throws Exception {
+		System.out.println("testUsingQueue");
+		Client c1 = new Client("localhost", PORT, "user1", "pass1");
+		Client c2 = new Client("localhost", PORT, "user2", "pass2");
+		Client c3 = new Client("localhost", PORT, "user3", "pass3");
+		
+		String dest = "queue^a";
+		
+		Map<String, StringBuffer> res1 = subscribe(c1, dest);
+		Map<String, StringBuffer> res3 = subscribe(c3, dest);
+		Thread.sleep(200);
+
+		c2.send(dest, "123");
+		Thread.sleep(200);
+		
+		c2.send(dest, "456");
+		Thread.sleep(200);
+		
+		c1.disconnect();
+		c2.send(dest, "789");
+
+		Thread.sleep(500);
+		assertEquals("123456", res1.get("MESSAGE").toString());
+		assertEquals("789", res3.get("MESSAGE").toString());
+		
+		c2.disconnect();
+		c3.disconnect();
+	}
 }

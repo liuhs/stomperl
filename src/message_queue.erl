@@ -2,9 +2,9 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
--export([is_queue/1]).
+-export([is_queue/1, produce/3, peek/2, consume/2]).
 
-is_queue([$q, $u, $e, $u, $e, $: | _Name]) -> true;
+is_queue([$q, $u, $e, $u, $e, $^ | _Name]) -> true;
 is_queue(_Dest) -> false.
 
 produce(Table, Dest, Message) ->
@@ -41,8 +41,8 @@ setup() ->
 
 is_queue_test_() ->
 	[
-	?_assertMatch(true, is_queue("queue:a")),
-	?_assertMatch(false, is_queue("topic:a")),
+	?_assertMatch(true, is_queue("queue^a")),
+	?_assertMatch(false, is_queue("topic^a")),
 	?_assertMatch(false, is_queue("a"))
 	].
 
