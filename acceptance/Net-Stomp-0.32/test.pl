@@ -26,15 +26,23 @@ $client3->subscribe(
 
 my $frame1 = $client2->receive_frame;
 assert_equals("test message", $frame1->body);
-$client2->ack( { frame => $frame1 } );
 
 my $frame2 = $client3->receive_frame;
 assert_equals("another test message", $frame2->body);
+
+$client2->ack( { frame => $frame1 } );
+sleep(1);
 $client3->ack( { frame => $frame2 } );
+$client3->disconnect;
+
+my $frame3 = $client2->receive_frame;
+assert_equals("another test message", $frame3->body);
+$client2->ack( { frame => $frame3 } );
 
 $client1->disconnect;
 $client2->disconnect;
-$client3->disconnect;
+
+print "\n";
 
 sub assert_equals{
 	my $expected = $_[0]; 

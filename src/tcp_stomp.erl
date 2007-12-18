@@ -80,7 +80,7 @@ process_frame(SocketWrapper, FrameText, Mailer, Table) ->
 				log:debug("ABORT transaction ~s~n", [TransactionId]);
 			"ACK" ->
 				MessageId = stomp_frame:get_header(Frame, "message-id"),
-				Mailer ! {acked, MessageId};
+				mailer:ack(Mailer, MessageId);
 			_Other ->
 				ErrorMessage = stomp_frame:get_command(Frame) ++ " is unsupported command",
 				log:debug("~s~n", [ErrorMessage]),

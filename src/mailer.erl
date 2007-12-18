@@ -1,7 +1,7 @@
 -module(mailer).
 -include_lib("eunit/include/eunit.hrl").
 
--export([init/2, send/2, send/3]).
+-export([init/2, send/2, send/3, ack/2]).
 
 %% APIs
 init(Parent, SocketWrapper) ->
@@ -33,6 +33,8 @@ notify([Subscriber | Others], Dest, Table) ->
 	Subscriber ! {notify, Dest, Table},
 	notify(Others, Dest, Table).
 
+ack(Mailer, MessageId) -> Mailer ! {acked, MessageId}.
+
 %% Mailer process
 loop(SocketWrapper) ->
 	receive
@@ -43,7 +45,7 @@ loop(SocketWrapper) ->
 			check_queue(SocketWrapper, Table, Dest),
 			loop(SocketWrapper);
 		Other ->
-			log:debug("I don't know how to handle this: ~p~n", [Other]),
+			log:debug("Mailer main loop doesn't know how to handle this: ~p~n", [Other]),
 			loop(SocketWrapper)
 	end.
 
@@ -56,7 +58,13 @@ check_queue(SocketWrapper, Table, Dest) ->
 				false -> ok;
 				true ->
 					receive
-						{acked, MessageId} -> ok
+						{acked, MessageId} -> 
+							log:debug("Message ~s has been acknowledged~n", [MessageId])
+					after 500 ->
+						log:debug("Message ~s hasn't been acknowledged yet, give up~n", [MessageId]),
+						message_queue:produce(Table, Dest, Message),
+						Subscribers = subscription:find_subscribers(Dest, Table),
+						notify(Subscribers, Dest, Table)
 					end
 			end,
 			check_queue(SocketWrapper, Table, Dest)
