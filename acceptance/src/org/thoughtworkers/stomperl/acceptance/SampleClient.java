@@ -184,7 +184,7 @@ public class SampleClient extends TestCase {
 		Thread.sleep(200);
 		
 		c2.send(dest, "456");
-		Thread.sleep(200);
+		Thread.sleep(500);
 		
 		c1.disconnect();
 		c2.send(dest, "789");
@@ -195,5 +195,24 @@ public class SampleClient extends TestCase {
 		
 		c2.disconnect();
 		c3.disconnect();
+	}
+	
+	public void testStoreMessageInQueue() throws Exception {
+		System.out.println("testStoreMessageInQueue");
+		
+		String dest = "queue^b";
+		Client c1 = new Client("localhost", PORT, "user1", "pass1");
+		c1.send(dest, "abc");
+		c1.send(dest, "def");
+		
+		Thread.sleep(200);
+		Client c2 = new Client("localhost", PORT, "user2", "pass2");
+		Map res = subscribe(c2, dest);
+		
+		Thread.sleep(500);
+		assertEquals("abcdef", res.get("MESSAGE").toString());
+		
+		c1.disconnect();
+		c2.disconnect();
 	}
 }

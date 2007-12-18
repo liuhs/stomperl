@@ -49,6 +49,7 @@ process_frame(SocketWrapper, FrameText, Mailer, Table) ->
 			"SUBSCRIBE" ->
 				Dest = stomp_frame:get_header(Frame, "destination"),
 				subscription:subscribe(Mailer, Dest, Table),
+				Mailer ! {notify, Dest, Table},
 				log:debug("Client of ~w SUBSCRIBED ~s~n", [Mailer, Dest]);
 			"UNSUBSCRIBE" ->
 				Dest = stomp_frame:get_header(Frame, "destination"),
