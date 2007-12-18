@@ -207,7 +207,7 @@ public class SampleClient extends TestCase {
 		
 		Thread.sleep(200);
 		Client c2 = new Client("localhost", PORT, "user2", "pass2");
-		Map res = subscribe(c2, dest);
+		Map<String, StringBuffer> res = subscribe(c2, dest);
 		
 		Thread.sleep(500);
 		assertEquals("abcdef", res.get("MESSAGE").toString());

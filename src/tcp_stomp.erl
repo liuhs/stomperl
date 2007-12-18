@@ -48,7 +48,8 @@ process_frame(SocketWrapper, FrameText, Mailer, Table) ->
 				log:debug("DISCONNECTED: mailer ~w~n", [Mailer]);
 			"SUBSCRIBE" ->
 				Dest = stomp_frame:get_header(Frame, "destination"),
-				subscription:subscribe(Mailer, Dest, Table),
+				Ack = stomp_frame:get_header(Frame, "ack", "auto"),
+				subscription:subscribe(Mailer, Dest, Ack, Table),
 				Mailer ! {notify, Dest, Table},
 				log:debug("Client of ~w SUBSCRIBED ~s~n", [Mailer, Dest]);
 			"UNSUBSCRIBE" ->
@@ -77,6 +78,9 @@ process_frame(SocketWrapper, FrameText, Mailer, Table) ->
 				TransactionId = stomp_frame:get_header(Frame, "transaction", "transaction_id"),
 				transaction:abort(TransactionId),
 				log:debug("ABORT transaction ~s~n", [TransactionId]);
+			"ACK" ->
+				MessageId = stomp_frame:get_header(Frame, "message-id"),
+				Mailer ! {acked, MessageId};
 			_Other ->
 				ErrorMessage = stomp_frame:get_command(Frame) ++ " is unsupported command",
 				log:debug("~s~n", [ErrorMessage]),

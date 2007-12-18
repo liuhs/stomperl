@@ -2,20 +2,26 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
--export([subscribe/3, find_subscribers/2, unsubscribe/2, unsubscribe/3]).
+-export([subscribe/4, find_subscribers/2, unsubscribe/2, unsubscribe/3, need_client_ack/3]).
 
-subscribe(Pid, Dest, Table) -> 
-	ets:insert(Table, {rand:new(), subscription, Dest, Pid}).
+subscribe(Pid, Dest, Table) -> subscribe(Pid, Dest, "auto", Table).
+
+subscribe(Pid, Dest, Ack, Table) -> 
+	ets:insert(Table, {rand:new(), subscription, Dest, Ack, Pid}).
 
 find_subscribers(Dest, Table) ->
-	Arrays = ets:match(Table, {'_', subscription, Dest, '$1'}),
+	Arrays = ets:match(Table, {'_', subscription, Dest, '_', '$1'}),
 	lists:map(fun(Array) -> lists:nth(1, Array) end, Arrays).
 
 unsubscribe(Pid, Dest, Table) ->
-	ets:match_delete(Table, {'_', subscription, Dest, Pid}).
+	ets:match_delete(Table, {'_', subscription, Dest, '_', Pid}).
 
 unsubscribe(Pid, Table) ->
-	ets:match_delete(Table, {'_', subscription, '_', Pid}).
+	ets:match_delete(Table, {'_', subscription, '_', '_', Pid}).
+
+need_client_ack(Pid, Dest, Table) ->
+	[[Ack]] = ets:match(Table, {'_', subscription, Dest, '$1', Pid}),
+	Ack == "client".
 
 %% Tests
 
@@ -49,4 +55,15 @@ unsubscribe_test_() ->
 	[
 	?_assertMatch([anyone], find_subscribers("/a", Table)), 
 	?_assertMatch([anyone], find_subscribers("/b", Table))
+	].
+	
+ack_type_test_() ->
+	Table = setup(),
+	Dest = "queue^/a",
+	subscribe("s1", Dest, Table),
+	subscribe("s2", Dest, "client", Table),
+	[S2, S1] = find_subscribers(Dest, Table),
+	[
+	?_assertMatch(false, need_client_ack(S1, Dest, Table)),
+	?_assertMatch(true, need_client_ack(S2, Dest, Table))
 	].

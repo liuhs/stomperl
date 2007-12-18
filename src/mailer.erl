@@ -51,16 +51,25 @@ check_queue(SocketWrapper, Table, Dest) ->
 	case message_queue:consume(Table, Dest) of
 		undefined -> ok;
 		Message -> 
-			send_to_socket(SocketWrapper, Message, Dest),
+			MessageId = send_to_socket(SocketWrapper, Message, Dest),
+			case subscription:need_client_ack(self(), Dest, Table) of
+				false -> ok;
+				true ->
+					receive
+						{acked, MessageId} -> ok
+					end
+			end,
 			check_queue(SocketWrapper, Table, Dest)
 	end.
 
 send_to_socket(SocketWrapper, Body, Dest) ->
 	log:debug("Sending message to ~s from ~w~n", [Dest, self()]),
-	MessageFrame = stomp_frame:new("MESSAGE", [{"destination", Dest}, {"message-id", integer_to_list(rand:new())}], Body),
+	MessageId = integer_to_list(rand:new()),
+	MessageFrame = stomp_frame:new("MESSAGE", [{"destination", Dest}, {"message-id", MessageId}], Body),
 	Message = stomp_frame:to_text(MessageFrame),
 	socket_wrapper:send(SocketWrapper, list_to_binary(Message)),
-	log:debug("MESSAGE sent from ~w:~n~s", [self(), Message]).
+	log:debug("MESSAGE sent from ~w:~n~s", [self(), Message]),
+	MessageId.
 
 
 %% Tests

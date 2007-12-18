@@ -41,6 +41,7 @@ unit_test: compile
 acceptance_test:
 	cd acceptance && ant
 	cd acceptance/Stomp-0.02 && make
+	cd acceptance/Net-Stomp-0.32 && make
 	pkill -9 erl
 	
 .PHONY: startup

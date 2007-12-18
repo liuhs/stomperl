@@ -6,9 +6,9 @@ support transaction (done)
 support ERROR for unknown commands and invalid SEND (done)
 determine destination as queue if its name starts with "queue^" (default destinations are topics) (done)
 send message from mailer only to first subscriber of a queue (done)
+support ACK for queues (done)
 
-support ACK for queues
-message resend for queues
+shouldn't consume message until get ACK
 
 
 == HOUSECLEAN ==
