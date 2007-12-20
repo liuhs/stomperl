@@ -28,6 +28,5 @@ send receipt for CONNECT if the client asks for it
 == FUTURE ==
 message persistence for queues
 compatibility test fixture
-full protocol support: what's left?
 create an application (shall we?)
 implement Stomp with gen_fsm
