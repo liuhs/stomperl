@@ -1,5 +1,13 @@
-== 0.0.1 - first preview release (REV 33) ==
+== 0.0.2 (REV 55) ==
+support both topic(sender/subscriber) and queue(producer/consumer) as destinations
+destination with name starts with "queue^" would be treated as a queue
+support transaction
+support ERROR for unknown commands and invalid SEND
+support ACK for queues
+message would not be consumed if subscriber set "ack" to "client" and doesn't send ACK back
 
+
+== 0.0.1 - first preview release (REV 33) ==
 support CONNECT
 support SUBSCRIBE/SEND
 support multi-frame

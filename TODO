@@ -1,18 +1,10 @@
-current version: 0.0.2
+current version: 0.0.3
 
 
 == FEATURES == 
-support transaction (done)
-support ERROR for unknown commands and invalid SEND (done)
-determine destination as queue if its name starts with "queue^" (default destinations are topics) (done)
-send message from mailer only to first subscriber of a queue (done)
-support ACK for queues (done)
-shouldn't consume message until get ACK (done)
 
 
 == HOUSECLEAN ==
-create stub for socket (done)
-
 add tests for tcp_stomp with stubbed socket
 fully automate acceptance tests / continuous integration
 
