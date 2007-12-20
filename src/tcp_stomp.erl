@@ -50,7 +50,7 @@ process_frame(SocketWrapper, FrameText, Mailer, Table) ->
 				Dest = stomp_frame:get_header(Frame, "destination"),
 				Ack = stomp_frame:get_header(Frame, "ack", "auto"),
 				subscription:subscribe(Mailer, Dest, Ack, Table),
-				Mailer ! {notify, Dest, Table},
+				mailer:notify([Mailer], Dest, Table),
 				log:debug("Client of ~w SUBSCRIBED ~s~n", [Mailer, Dest]);
 			"UNSUBSCRIBE" ->
 				Dest = stomp_frame:get_header(Frame, "destination"),

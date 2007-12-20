@@ -20,8 +20,11 @@ unsubscribe(Pid, Table) ->
 	ets:match_delete(Table, {'_', subscription, '_', '_', Pid}).
 
 need_client_ack(Pid, Dest, Table) ->
-	[[Ack]] = ets:match(Table, {'_', subscription, Dest, '$1', Pid}),
-	Ack == "client".
+	QueryResult = ets:match(Table, {'_', subscription, Dest, '$1', Pid}),
+	case QueryResult of
+		[] -> undefined;
+		[[Ack]] -> Ack == "client"
+	end.
 
 %% Tests
 
@@ -65,5 +68,6 @@ ack_type_test_() ->
 	[S2, S1] = find_subscribers(Dest, Table),
 	[
 	?_assertMatch(false, need_client_ack(S1, Dest, Table)),
-	?_assertMatch(true, need_client_ack(S2, Dest, Table))
+	?_assertMatch(true, need_client_ack(S2, Dest, Table)),
+	?_assertMatch(undefined, need_client_ack("not_exist", Dest, Table))
 	].

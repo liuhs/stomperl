@@ -176,19 +176,16 @@ public class SampleClient extends TestCase {
 		
 		String dest = "queue^a";
 		
-		Map<String, StringBuffer> res1 = subscribe(c1, dest);
-		Map<String, StringBuffer> res3 = subscribe(c3, dest);
-		Thread.sleep(200);
-
 		c2.send(dest, "123");
-		Thread.sleep(200);
-		
 		c2.send(dest, "456");
-		Thread.sleep(500);
 		
+		Map<String, StringBuffer> res1 = subscribe(c1, dest);
+		Thread.sleep(500);
+
 		c1.disconnect();
 		c2.send(dest, "789");
 
+		Map<String, StringBuffer> res3 = subscribe(c3, dest);
 		Thread.sleep(500);
 		assertEquals("123456", res1.get("MESSAGE").toString());
 		assertEquals("789", res3.get("MESSAGE").toString());

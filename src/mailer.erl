@@ -1,7 +1,7 @@
 -module(mailer).
 -include_lib("eunit/include/eunit.hrl").
 
--export([init/2, send/2, send/3, ack/2]).
+-export([init/2, send/2, send/3, notify/3, ack/2]).
 
 %% APIs
 init(Parent, SocketWrapper) ->
@@ -55,7 +55,6 @@ check_queue(SocketWrapper, Table, Dest) ->
 		Message -> 
 			MessageId = send_to_socket(SocketWrapper, Message, Dest),
 			case subscription:need_client_ack(self(), Dest, Table) of
-				false -> ok;
 				true ->
 					receive
 						{acked, MessageId} -> 
@@ -65,7 +64,8 @@ check_queue(SocketWrapper, Table, Dest) ->
 						message_queue:produce(Table, Dest, Message),
 						Subscribers = subscription:find_subscribers(Dest, Table),
 						notify(Subscribers, Dest, Table)
-					end
+					end;
+				_ -> ok
 			end,
 			check_queue(SocketWrapper, Table, Dest)
 	end.
