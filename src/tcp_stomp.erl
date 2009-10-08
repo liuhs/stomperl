@@ -6,7 +6,7 @@
 -export([start_link/2]). 
 
 % Callbacks
--export([init/3, recv/3]).
+-export([init/3, recv/4]).
 
 % External API
 start_link(Socket, Table) ->
@@ -17,20 +17,25 @@ init(Parent, Socket, Table) ->
   proc_lib:init_ack(Parent, {ok, self()}),
 	SocketWrapper = socket_wrapper:new(Socket),
   {ok, Mailer} = proc_lib:start_link(mailer, init, [self(), SocketWrapper]),
-  recv(SocketWrapper, Mailer, Table).
+  recv(SocketWrapper, Mailer, Table, "").
 
-recv(SocketWrapper, Mailer, Table) ->
+recv(SocketWrapper, Mailer, Table, PreviousText) ->
   case socket_wrapper:recv(SocketWrapper, 0) of
     {ok, B} ->
 %    	log:debug("GOT DATA :\n~w~n", [B]),
-			FrameText = binary_to_list(B),
-      log:debug("GOT FRAME:~n~s~n", [FrameText]),
-      process_frame(SocketWrapper, FrameText, Mailer, Table),
-      recv(SocketWrapper, Mailer, Table);
+	  FrameText = string:concat(PreviousText, binary_to_list(B)),
+	  recv_frame(SocketWrapper, Mailer, Table, FrameText, string:substr(FrameText, string:len(FrameText)));
     {error, closed} ->
     	subscription:unsubscribe(Mailer, Table),
       ok
   end.
+
+recv_frame(SocketWrapper, Mailer, Table, FrameText, [0]) ->
+	log:debug("GOT FRAME:~n~s~n", [FrameText]),
+    process_frame(SocketWrapper, FrameText, Mailer, Table),
+    recv(SocketWrapper, Mailer, Table, "");
+recv_frame(SocketWrapper, Mailer, Table, FrameText, _Any) ->
+	recv(SocketWrapper, Mailer, Table, FrameText).
 
 process_frame(SocketWrapper, FrameText, Mailer, Table) ->
 	Frames = stomp_frame:parse_frames(FrameText),

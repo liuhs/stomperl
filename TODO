@@ -1,8 +1,7 @@
 current version: 0.0.3
 
-
 == FEATURES == 
-
+support null-ending-frame sent by AjaxMessaging (pass ruby-stomp test cases)
 
 == HOUSECLEAN ==
 add tests for tcp_stomp with stubbed socket

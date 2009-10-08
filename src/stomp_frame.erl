@@ -34,9 +34,11 @@ split_frame(FrameText) ->
 parse_headers([]) -> [];
 parse_headers([HeaderText | Others]) ->
 	Tokens = string:tokens(HeaderText, ":"),
-	Key = lists:nth(1, Tokens),
-	Value = lists:nth(2, Tokens),
-	[{Key, Value} | parse_headers(Others)].
+	Pair = to_pair(Tokens),
+	[Pair | parse_headers(Others)].
+
+to_pair([Key]) -> {Key, ""};
+to_pair([Key | [Value]]) -> {Key, Value}.
 
 get_command({frame, Command, _Headers, _Body}) -> Command.
 get_headers({frame, _Command, Headers, _Body}) -> Headers.
@@ -101,6 +103,12 @@ parse_headers_test_() ->
 	Headers = parse_headers(["name:value", "foo:bar"]),
 	[
 	?_assertMatch([{"name", "value"}, {"foo", "bar"}], Headers)
+	].
+	
+parse_headers_with_empty_value_test() ->
+	Headers = parse_headers(["name:", "foo: "]),
+	[
+	?_assertMatch([{"name", ""}, {"foo", ""}], Headers)
 	].
 	
 split_frame_test_() ->
