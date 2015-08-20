@@ -1,0 +1,18 @@
+my environment:
+  * Cygwin
+  * Erlang/OTP R11B-5
+  * EUnit 2.0 Beta
+  * Java 6
+  * Ant 1.7.0
+  * Perl 5.8.8
+
+to make it run:
+  * make startup (console 1, should start an Erlang console)
+  * make test (console 2, should pass all tests and kill the Erlang process in console 1)
+
+**NOTE**
+
+Destinations could be both topics(sender/subscriber) or queues(producer/consumer).
+By default they are all topics.
+To create a queue, just name it starting with "queue^".
+(E.g. "/a/b" would be a topic, and "queue^/a/b" would be a queue.)
